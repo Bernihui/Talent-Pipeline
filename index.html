@@ -140,7 +140,7 @@ tr:hover td{background:#f8fafc}
 </head>
 <body>
 <div class="app">
-
+ 
 <div class="topbar">
   <div class="topbar-left">
     <span class="logo">NotCo</span>
@@ -154,13 +154,13 @@ tr:hover td{background:#f8fafc}
     </button>
   </div>
 </div>
-
+ 
 <div class="nav-tabs">
   <button class="nav-tab active" onclick="switchView('ninebox',this)">Nine-Box Grid</button>
   <button class="nav-tab" onclick="switchView('admin',this)">Gestión de Partners</button>
   <button class="nav-tab" onclick="switchView('fichas',this)">Fichas Guardadas</button>
 </div>
-
+ 
 <div class="view active" id="view-ninebox">
   <div class="nb-layout">
     <div class="nb-left">
@@ -200,7 +200,7 @@ tr:hover td{background:#f8fafc}
     </div>
   </div>
 </div>
-
+ 
 <div class="view" id="view-admin">
   <div class="admin-layout">
     <div class="admin-header">
@@ -234,7 +234,7 @@ tr:hover td{background:#f8fafc}
     </div>
   </div>
 </div>
-
+ 
 <div class="view" id="view-fichas">
   <div class="admin-layout">
     <div class="admin-header">
@@ -260,7 +260,7 @@ tr:hover td{background:#f8fafc}
     </div>
   </div>
 </div>
-
+ 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Editar partner</h3>
@@ -274,11 +274,11 @@ tr:hover td{background:#f8fafc}
     </div>
   </div>
 </div>
-
+ 
 <script>
 const SB_URL="https://sbfvtyidzqfphngiavlt.supabase.co";
 const SB_KEY="sb_publishable_acY7A-WcLtFhf9Ka_PmlgA_67tsrNkD";
-
+ 
 async function sbGet(table,filter=""){
   const r=await fetch(`${SB_URL}/rest/v1/${table}${filter}`,{headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`}});
   if(!r.ok)throw new Error(await r.text());
@@ -289,7 +289,7 @@ async function sbUpsert(table,data){
   if(!r.ok)throw new Error(await r.text());
   return r.json();
 }
-
+ 
 function setSyncPill(s){
   const el=document.getElementById("syncPill");el.className="sync-pill";
   if(s==="ok"){el.classList.add("pill-ok");el.textContent="✓ Guardado";setTimeout(()=>setSyncPill("idle"),3000);}
@@ -297,7 +297,7 @@ function setSyncPill(s){
   else if(s==="err"){el.classList.add("pill-err");el.textContent="Error de sync";setTimeout(()=>setSyncPill("idle"),5000);}
   else{el.classList.add("pill-idle");el.textContent="Listo";}
 }
-
+ 
 const PERF={Desalineado:1,Alineado:2,"Role Model":3};
 const CM={"1-3":{l:"Enigma",bg:"#fef9c3",ac:"#a16207"},"2-3":{l:"Future Star",bg:"#dcfce7",ac:"#15803d"},"3-3":{l:"Top Talent",bg:"#166534",ac:"#4ade80",dk:true},"1-2":{l:"Under Performer",bg:"#fee2e2",ac:"#dc2626"},"2-2":{l:"Core Player",bg:"#dbeafe",ac:"#1d4ed8"},"3-2":{l:"High Performer",bg:"#ede9fe",ac:"#6d28d9"},"1-1":{l:"Riesgo",bg:"#fecaca",ac:"#b91c1c"},"2-1":{l:"Sólido",bg:"#f1f5f9",ac:"#475569"},"3-1":{l:"Experto",bg:"#faf5ff",ac:"#7e22ce"}};
 const BEH_LABELS=["Iniciativa","Des. Equipos","Feedback","Aprendizaje","P. Sistémico","Ambigüedad","Escucha","Comunicación"];
@@ -305,9 +305,9 @@ const BEH_COLORS=["#3b82f6","#3b82f6","#8b5cf6","#8b5cf6","#f59e0b","#f59e0b","#
 const COLORS=["#6366f1","#0ea5e9","#10b981","#f59e0b","#ec4899","#14b8a6","#8b5cf6","#f97316"];
 const gc=n=>{let h=0;for(let i=0;i<n.length;i++)h=(h+n.charCodeAt(i))%COLORS.length;return COLORS[h];};
 const ini=n=>{const p=n.trim().split(" ");return(p[0][0]+(p[1]?.[0]||"")).toUpperCase();};
-
+ 
 let PARTNERS=[],FICHAS={},activeName=null,editingId=null;
-
+ 
 function renderFichasTable(){
   const fichas=Object.values(FICHAS).filter(f=>f.pipeline_now||f.pipeline_one||f.dev_needs||f.key_strengths||f.retention_risk||f.dev_designation);
   document.getElementById("fichasLoading").style.display="none";
@@ -329,7 +329,7 @@ function renderFichasTable(){
     </tr>`;
   }).join("");
 }
-
+ 
 function exportFichas(){
   const fichas=Object.values(FICHAS);
   if(!fichas.length){alert("No hay fichas guardadas para exportar.");return;}
@@ -345,7 +345,7 @@ function exportFichas(){
   const a=document.createElement("a");a.href=url;a.download="FichasCarrera_NotCo_2025.csv";a.click();
   URL.revokeObjectURL(url);
 }
-
+ 
 async function loadAll(){
   try{
     const[partners,fichas]=await Promise.all([sbGet("partners","?select=*&order=nombre"),sbGet("fichas_carrera","?select=*")]);
@@ -360,24 +360,24 @@ async function loadAll(){
     document.getElementById("nbLoading").innerHTML=`<span style="color:#dc2626;font-size:12px">Error al cargar: ${e.message}</span>`;
   }
 }
-
+ 
 async function reloadData(){
   document.getElementById("nbLoading").style.display="flex";document.getElementById("nbContent").style.display="none";
   document.getElementById("adminLoading").style.display="flex";document.getElementById("adminTable").style.display="none";
   setSyncPill("saving");await loadAll();
 }
-
+ 
 function merged(p){
   const f=FICHAS[p.nombre.toLowerCase()]||{};
   const potY=p.pot_avg!=null?(p.pot_avg>=2.5?3:p.pot_avg>=1.5?2:1):((p.talent||"").toLowerCase().includes("key talent")?3:2);
   return {...p,potY,pipelineNow:f.pipeline_now||"",pipelineOne:f.pipeline_one||"",pipelineTwo:f.pipeline_two||"",devNeeds:f.dev_needs||"",devActions:f.dev_actions||"",keyStrengths:f.key_strengths||"",aspirations:f.aspirations||"",personalNotes:f.personal_notes||"",retentionRisk:f.retention_risk||"",devDesig:f.dev_designation||""};
 }
-
+ 
 function buildFilters(){
   const areas=["Todas las áreas",...Array.from(new Set(PARTNERS.map(p=>p.area))).filter(Boolean).sort()];
   ["areaFilter","areaFilter2"].forEach(id=>{const sel=document.getElementById(id);sel.innerHTML="";areas.forEach(a=>{const o=document.createElement("option");o.textContent=a;sel.appendChild(o);});});
 }
-
+ 
 function getFiltered(areaId="areaFilter",searchId=null,perfId=null){
   let d=PARTNERS.map(merged);
   const a=document.getElementById(areaId)?.value;
@@ -386,7 +386,7 @@ function getFiltered(areaId="areaFilter",searchId=null,perfId=null){
   if(perfId){const pf=document.getElementById(perfId)?.value||"";if(pf)d=d.filter(p=>p.desempeno===pf);}
   return d;
 }
-
+ 
 function renderGrid(){
   const data=getFiltered("areaFilter");
   const placed=data.filter(p=>PERF[p.desempeno]);
@@ -417,9 +417,9 @@ function renderGrid(){
   const rm=placed.filter(p=>p.desempeno==="Role Model").length,des=placed.filter(p=>p.desempeno==="Desalineado").length;
   document.getElementById("stats").innerHTML=[{l:"Top Talent",v:tt,c:"#15803d"},{l:"Key Talents",v:kt,c:"#a16207"},{l:"Role Models",v:rm,c:"#6d28d9"},{l:"Desalineados",v:des,c:"#dc2626"}].map(s=>`<div class="stat" style="border-left-color:${s.c}"><div class="stat-n" style="color:${s.c}">${s.v}</div><div class="stat-l">${s.l}</div></div>`).join("");
 }
-
+ 
 function selectPerson(name,cellKey){activeName=name;renderGrid();const p=PARTNERS.map(merged).find(d=>d.nombre===name);if(p)renderCard(p,cellKey);}
-
+ 
 function renderCard(p,cellKey){
   const m=CM[cellKey],isKT=(p.talent||"").toLowerCase().includes("key talent");
   const potDisp=p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"—";
@@ -498,7 +498,7 @@ function renderCard(p,cellKey){
     <div class="save-note">Guardado en Supabase · disponible desde cualquier computador</div>
   `;
 }
-
+ 
 async function saveCard(name){
   const btn=document.getElementById("saveCardBtn");if(btn)btn.disabled=true;
   setSyncPill("saving");
@@ -510,7 +510,7 @@ async function saveCard(name){
   }catch(e){setSyncPill("err");}
   if(btn)btn.disabled=false;
 }
-
+ 
 function renderTable(){
   const data=getFiltered("areaFilter2","searchInput","perfFilter");
   const pc=d=>d.desempeno==="Role Model"?"pb pb-rm":d.desempeno==="Alineado"?"pb pb-al":d.desempeno==="Desalineado"?"pb pb-des":"pb pb-ne";
@@ -524,10 +524,10 @@ function renderTable(){
     <td><button class="btn btn-ghost" style="font-size:10px;padding:4px 9px" onclick="openEditModal('${p.id}')">Editar</button></td>
   </tr>`).join("");
 }
-
+ 
 function openAddModal(){editingId=null;document.getElementById("modalTitle").textContent="Agregar partner";document.getElementById("modalBody").innerHTML=modalFields({});document.getElementById("modalOverlay").classList.add("open");}
 function openEditModal(id){const p=PARTNERS.find(p=>p.id===id);if(!p)return;editingId=id;document.getElementById("modalTitle").textContent="Editar partner";document.getElementById("modalBody").innerHTML=modalFields(p);document.getElementById("modalOverlay").classList.add("open");}
-
+ 
 function modalFields(p){
   const perfOpts=["Alineado","Role Model","Desalineado","No Evaluado"].map(v=>`<option value="${v}"${p.desempeno===v?" selected":""}>${v}</option>`).join("");
   return`
@@ -542,9 +542,9 @@ function modalFields(p){
     <div class="mf full"><label>Clasificación potencial</label><select id="mf_pot_class"><option value="">Sin datos</option><option${p.pot_class==="Alto"?" selected":""}>Alto</option><option${p.pot_class==="Medio"?" selected":""}>Medio</option><option${p.pot_class==="Bajo"?" selected":""}>Bajo</option></select></div>
   `;
 }
-
+ 
 function closeModal(){document.getElementById("modalOverlay").classList.remove("open");editingId=null;}
-
+ 
 async function saveModal(){
   const g=id=>document.getElementById(id)?.value||"";
   const nombre=g("mf_nombre").trim();if(!nombre){alert("El nombre es obligatorio");return;}
@@ -556,17 +556,18 @@ async function saveModal(){
     closeModal();await reloadData();
   }catch(e){setSyncPill("err");alert("Error al guardar: "+e.message);}
 }
-
+ 
 document.getElementById("modalOverlay").addEventListener("click",e=>{if(e.target===document.getElementById("modalOverlay"))closeModal();});
-
+ 
 function switchView(id,btn){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
   document.getElementById("view-"+id).classList.add("active");
   btn.classList.add("active");
 }
-
+ 
 loadAll();
 </script>
 </body>
 </html>
+ 
