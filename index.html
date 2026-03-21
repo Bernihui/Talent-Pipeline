@@ -158,6 +158,7 @@ tr:hover td{background:#f8fafc}
 <div class="nav-tabs">
   <button class="nav-tab active" onclick="switchView('ninebox',this)">Nine-Box Grid</button>
   <button class="nav-tab" onclick="switchView('admin',this)">Gestión de Partners</button>
+  <button class="nav-tab" onclick="switchView('fichas',this)">Fichas Guardadas</button>
 </div>
 
 <div class="view active" id="view-ninebox">
@@ -234,6 +235,32 @@ tr:hover td{background:#f8fafc}
   </div>
 </div>
 
+<div class="view" id="view-fichas">
+  <div class="admin-layout">
+    <div class="admin-header">
+      <div>
+        <h2>Fichas de Carrera Guardadas</h2>
+        <p>Todas las fichas completadas — podés exportarlas a Excel</p>
+      </div>
+      <button class="btn btn-primary" onclick="exportFichas()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar a Excel
+      </button>
+    </div>
+    <div class="table-wrap">
+      <div class="loading" id="fichasLoading"><div class="spinner"></div>Cargando fichas...</div>
+      <table id="fichasTable" style="display:none">
+        <thead><tr>
+          <th>Nombre</th><th>Área</th><th>Pipeline Ready Now</th>
+          <th>A un movimiento</th><th>Necesidades</th><th>Fortalezas</th>
+          <th>Riesgo Retención</th><th>Designation</th><th>Última actualización</th>
+        </tr></thead>
+        <tbody id="fichasBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Editar partner</h3>
@@ -265,9 +292,9 @@ async function sbUpsert(table,data){
 
 function setSyncPill(s){
   const el=document.getElementById("syncPill");el.className="sync-pill";
-  if(s==="ok"){el.classList.add("pill-ok");el.textContent="✓ Guardado";}
+  if(s==="ok"){el.classList.add("pill-ok");el.textContent="✓ Guardado";setTimeout(()=>setSyncPill("idle"),3000);}
   else if(s==="saving"){el.classList.add("pill-saving");el.textContent="Guardando…";}
-  else if(s==="err"){el.classList.add("pill-err");el.textContent="Error de sync";}
+  else if(s==="err"){el.classList.add("pill-err");el.textContent="Error de sync";setTimeout(()=>setSyncPill("idle"),5000);}
   else{el.classList.add("pill-idle");el.textContent="Listo";}
 }
 
@@ -281,11 +308,49 @@ const ini=n=>{const p=n.trim().split(" ");return(p[0][0]+(p[1]?.[0]||"")).toUppe
 
 let PARTNERS=[],FICHAS={},activeName=null,editingId=null;
 
+function renderFichasTable(){
+  const fichas=Object.values(FICHAS).filter(f=>f.pipeline_now||f.pipeline_one||f.dev_needs||f.key_strengths||f.retention_risk||f.dev_designation);
+  document.getElementById("fichasLoading").style.display="none";
+  document.getElementById("fichasTable").style.display=fichas.length?"table":"none";
+  if(!fichas.length){document.getElementById("fichasLoading").innerHTML='<span style="color:#94a3b8;font-size:12px">No hay fichas guardadas aún</span>';document.getElementById("fichasLoading").style.display="flex";return;}
+  const fmt=d=>{if(!d)return"—";try{return new Date(d).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit",year:"numeric"});}catch{return d;}};
+  document.getElementById("fichasBody").innerHTML=fichas.map(f=>{
+    const p=PARTNERS.find(p=>p.nombre.toLowerCase()===f.nombre.toLowerCase())||{};
+    return`<tr>
+      <td style="font-weight:600">${f.nombre}</td>
+      <td style="color:#64748b">${p.area||"—"}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.pipeline_now||""}">${f.pipeline_now||"—"}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.pipeline_one||""}">${f.pipeline_one||"—"}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.dev_needs||""}">${f.dev_needs||"—"}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.key_strengths||""}">${f.key_strengths||"—"}</td>
+      <td><span class="pb ${f.retention_risk==="Alto"?"pb-des":f.retention_risk==="Bajo"?"pb-rm":"pb-al"}">${f.retention_risk||"—"}</span></td>
+      <td style="color:#64748b">${f.dev_designation||"—"}</td>
+      <td style="color:#94a3b8;font-size:11px">${fmt(f.updated_at)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function exportFichas(){
+  const fichas=Object.values(FICHAS);
+  if(!fichas.length){alert("No hay fichas guardadas para exportar.");return;}
+  const rows=[["Nombre","Área","Seniority","Cargo","Desempeño","Potencial","Clasificación","Pipeline Ready Now","A un movimiento","A dos movimientos","Necesidades de Desarrollo","Acciones de Desarrollo","Fortalezas Clave","Aspiraciones","Riesgo de Retención","Development Designation","Consideraciones Personales","Última Actualización"]];
+  fichas.forEach(f=>{
+    const p=PARTNERS.find(p=>p.nombre.toLowerCase()===f.nombre.toLowerCase())||{};
+    rows.push([f.nombre,p.area||"",p.seniority||"",p.cargo||"",p.desempeno||"",p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"",p.pot_class||"",f.pipeline_now||"",f.pipeline_one||"",f.pipeline_two||"",f.dev_needs||"",f.dev_actions||"",f.key_strengths||"",f.aspirations||"",f.retention_risk||"",f.dev_designation||"",f.personal_notes||"",f.updated_at||""]);
+  });
+  // Build CSV
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="FichasCarrera_NotCo_2025.csv";a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function loadAll(){
   try{
     const[partners,fichas]=await Promise.all([sbGet("partners","?select=*&order=nombre"),sbGet("fichas_carrera","?select=*")]);
     PARTNERS=partners;FICHAS={};fichas.forEach(f=>FICHAS[f.nombre.toLowerCase()]=f);
-    buildFilters();renderGrid();renderTable();setSyncPill("ok");
+    buildFilters();renderGrid();renderTable();renderFichasTable();setSyncPill("ok");
     document.getElementById("nbLoading").style.display="none";
     document.getElementById("nbContent").style.display="block";
     document.getElementById("adminLoading").style.display="none";
@@ -440,8 +505,8 @@ async function saveCard(name){
   const g=id=>document.getElementById(id)?.value||"";
   try{
     await sbUpsert("fichas_carrera",{nombre:name,pipeline_now:g("pipe_now"),pipeline_one:g("pipe_one"),pipeline_two:g("pipe_two"),dev_needs:g("dev_needs"),dev_actions:g("dev_actions"),key_strengths:g("key_strengths"),aspirations:g("aspirations"),personal_notes:g("personal_notes"),retention_risk:g("retention_risk"),dev_designation:g("dev_designation"),updated_at:new Date().toISOString()});
-    FICHAS[name.toLowerCase()]={nombre:name,pipeline_now:g("pipe_now"),pipeline_one:g("pipe_one"),pipeline_two:g("pipe_two"),dev_needs:g("dev_needs"),dev_actions:g("dev_actions"),key_strengths:g("key_strengths"),aspirations:g("aspirations"),personal_notes:g("personal_notes"),retention_risk:g("retention_risk"),dev_designation:g("dev_designation")};
-    setSyncPill("ok");
+    FICHAS[name.toLowerCase()]={nombre:name,pipeline_now:g("pipe_now"),pipeline_one:g("pipe_one"),pipeline_two:g("pipe_two"),dev_needs:g("dev_needs"),dev_actions:g("dev_actions"),key_strengths:g("key_strengths"),aspirations:g("aspirations"),personal_notes:g("personal_notes"),retention_risk:g("retention_risk"),dev_designation:g("dev_designation"),updated_at:new Date().toISOString()};
+    renderFichasTable();setSyncPill("ok");
   }catch(e){setSyncPill("err");}
   if(btn)btn.disabled=false;
 }
