@@ -1321,7 +1321,7 @@ function renderCard(p,cellKey){
             <div class="plan-step-content">
               <div class="plan-step-label">Ready Now</div>
               <select class="plan-step-select" id="pipe_now" onchange="checkOther('pipe_now','pipe_now_other')">
-                ${posOpts.replace(`value="${pNow}"`,`value="${pNow}" selected`)}
+                ${posOpts.replace('value="'+pNow+'"','value="'+pNow+'" selected')}
               </select>
               <input class="plan-step-input" id="pipe_now_other" placeholder="Otro rol (opcional)..." value="${pNowOther}" style="margin-top:4px;${pNowOther?'display:block':'display:none'}">
             </div>
@@ -1331,7 +1331,7 @@ function renderCard(p,cellKey){
             <div class="plan-step-content">
               <div class="plan-step-label">A un movimiento</div>
               <select class="plan-step-select" id="pipe_one" onchange="checkOther('pipe_one','pipe_one_other')">
-                ${posOpts.replace(`value="${pOne}"`,`value="${pOne}" selected`)}
+                ${posOpts.replace('value="'+pOne+'"','value="'+pOne+'" selected')}
               </select>
               <input class="plan-step-input" id="pipe_one_other" placeholder="Otro rol (opcional)..." value="${pOneOther}" style="margin-top:4px;${pOneOther?'display:block':'display:none'}">
             </div>
@@ -1341,7 +1341,7 @@ function renderCard(p,cellKey){
             <div class="plan-step-content">
               <div class="plan-step-label">A dos movimientos</div>
               <select class="plan-step-select" id="pipe_two" onchange="checkOther('pipe_two','pipe_two_other')">
-                ${posOpts.replace(`value="${pTwo}"`,`value="${pTwo}" selected`)}
+                ${posOpts.replace('value="'+pTwo+'"','value="'+pTwo+'" selected')}
               </select>
               <input class="plan-step-input" id="pipe_two_other" placeholder="Otro rol (opcional)..." value="${pTwoOther}" style="margin-top:4px;${pTwoOther?'display:block':'display:none'}">
             </div>
@@ -1359,7 +1359,7 @@ function renderCard(p,cellKey){
             <div class="plan-step-content">
               <div class="plan-step-label">Ready Now</div>
               <select class="plan-step-select" id="pipe_b_now" onchange="checkOther('pipe_b_now','pipe_b_now_other')">
-                ${posOpts.replace(`value="${pBNow}"`,`value="${pBNow}" selected`)}
+                ${posOpts.replace('value="'+pBNow+'"','value="'+pBNow+'" selected')}
               </select>
               <input class="plan-step-input" id="pipe_b_now_other" placeholder="Otro rol (opcional)..." value="${pBNowOther}" style="margin-top:4px;${pBNowOther?'display:block':'display:none'}">
             </div>
@@ -1369,7 +1369,7 @@ function renderCard(p,cellKey){
             <div class="plan-step-content">
               <div class="plan-step-label">A un movimiento</div>
               <select class="plan-step-select" id="pipe_b_one" onchange="checkOther('pipe_b_one','pipe_b_one_other')">
-                ${posOpts.replace(`value="${pBOne}"`,`value="${pBOne}" selected`)}
+                ${posOpts.replace('value="'+pBOne+'"','value="'+pBOne+'" selected')}
               </select>
               <input class="plan-step-input" id="pipe_b_one_other" placeholder="Otro rol (opcional)..." value="${pBOneOther}" style="margin-top:4px;${pBOneOther?'display:block':'display:none'}">
             </div>
@@ -1379,7 +1379,7 @@ function renderCard(p,cellKey){
             <div class="plan-step-content">
               <div class="plan-step-label">A dos movimientos</div>
               <select class="plan-step-select" id="pipe_b_two" onchange="checkOther('pipe_b_two','pipe_b_two_other')">
-                ${posOpts.replace(`value="${pBTwo}"`,`value="${pBTwo}" selected`)}
+                ${posOpts.replace('value="'+pBTwo+'"','value="'+pBTwo+'" selected')}
               </select>
               <input class="plan-step-input" id="pipe_b_two_other" placeholder="Otro rol (opcional)..." value="${pBTwoOther}" style="margin-top:4px;${pBTwoOther?'display:block':'display:none'}">
             </div>
