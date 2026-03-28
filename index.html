@@ -292,7 +292,7 @@ tr:hover td{background:#f8fafc}
         <thead><tr>
           <th>Nombre</th><th>Área</th><th>Pipeline Ready Now</th>
           <th>A un movimiento</th><th>Necesidades</th><th>Fortalezas</th>
-          <th>Riesgo Retención</th><th>Designation</th><th>Última actualización</th>
+          <th>Riesgo Retención</th><th>Designation</th><th>Última actualización</th><th>Acciones</th>
         </tr></thead>
         <tbody id="fichasBody"></tbody>
       </table>
@@ -406,18 +406,68 @@ function renderFichasTable(){
   const fmt=d=>{if(!d)return"—";try{return new Date(d).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit",year:"numeric"});}catch{return d;}};
   document.getElementById("fichasBody").innerHTML=fichas.map(f=>{
     const p=PARTNERS.find(p=>p.nombre.toLowerCase()===f.nombre.toLowerCase())||{};
+    const safeName=f.nombre.replace(/'/g,"\'");
     return`<tr>
       <td style="font-weight:600">${f.nombre}</td>
       <td style="color:#64748b">${p.area||"—"}</td>
-      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.pipeline_now||""}">${f.pipeline_now||"—"}</td>
-      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.pipeline_one||""}">${f.pipeline_one||"—"}</td>
-      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.dev_needs||""}">${f.dev_needs||"—"}</td>
-      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.key_strengths||""}">${f.key_strengths||"—"}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.pipeline_now||""}">${f.pipeline_now||"—"}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.pipeline_one||""}">${f.pipeline_one||"—"}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.dev_needs||""}">${f.dev_needs||"—"}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.key_strengths||""}">${f.key_strengths||"—"}</td>
       <td><span class="pb ${f.retention_risk==="Alto"?"pb-des":f.retention_risk==="Bajo"?"pb-rm":"pb-al"}">${f.retention_risk||"—"}</span></td>
       <td style="color:#64748b">${f.dev_designation||"—"}</td>
       <td style="color:#94a3b8;font-size:11px">${fmt(f.updated_at)}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 9px" onclick="editFicha('${safeName}')">Editar</button>
+          <button class="btn" style="font-size:10px;padding:4px 9px;background:#fff;color:#dc2626;border-color:#fecaca" onclick="deleteFicha('${safeName}')">Eliminar</button>
+        </div>
+      </td>
     </tr>`;
   }).join("");
+}
+
+function editFicha(name){
+  // Find the partner and their cell in the ninebox, then switch to ninebox view and open card
+  const p = PARTNERS.map(merged).find(d=>d.nombre===name);
+  if(!p) return;
+  const x = PERF[p.desempeno];
+  const y = p.potY;
+  if(!x) { alert("Esta persona no tiene desempeño asignado. Edítala desde Gestión de Partners."); return; }
+  const cellKey = `${x}-${y}`;
+  // Switch to ninebox view
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("view-ninebox").classList.add("active");
+  document.querySelectorAll(".nav-tab")[0].classList.add("active");
+  // Select person
+  activeName = name;
+  renderGrid();
+  renderCard(p, cellKey);
+}
+
+async function deleteFicha(name){
+  if(!confirm(`¿Eliminar la ficha de ${name}? Esta acción no se puede deshacer.`)) return;
+  setSyncPill("saving");
+  try{
+    // Find ficha id
+    const f = FICHAS[name.toLowerCase()];
+    if(f && f.id){
+      await fetch(`${SB_URL}/rest/v1/fichas_carrera?id=eq.${f.id}`,{
+        method:"DELETE",
+        headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`}
+      });
+    }
+    delete FICHAS[name.toLowerCase()];
+    // Clear card if currently open
+    if(activeName===name){
+      activeName=null;
+      document.getElementById("careerCard").classList.remove("show");
+      document.getElementById("cardEmpty").style.display="flex";
+    }
+    renderFichasTable();
+    setSyncPill("ok");
+  }catch(e){ setSyncPill("err"); alert("Error al eliminar: "+e.message); }
 }
 
 function exportFichas(){
