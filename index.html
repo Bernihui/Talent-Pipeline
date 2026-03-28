@@ -842,6 +842,32 @@ function selectPerson(name,cellKey){
 }
 
 
+// ── Helper: build beh detail list HTML ───────────────────────────────────────
+function buildBehDetailList(scores){
+  const behs=[
+    {lbl:"Iniciativa y liderazgo",i:0,c:"#3b82f6"},
+    {lbl:"Desarrollo de equipos",i:1,c:"#3b82f6"},
+    {lbl:"Orientación al feedback",i:2,c:"#8b5cf6"},
+    {lbl:"Aprendizaje continuo",i:3,c:"#8b5cf6"},
+    {lbl:"Pensamiento sistémico",i:4,c:"#f59e0b"},
+    {lbl:"Tolerancia a la ambigüedad",i:5,c:"#f59e0b"},
+    {lbl:"Capacidad de escucha",i:6,c:"#10b981"},
+    {lbl:"Habilidad comunicacional",i:7,c:"#10b981"},
+  ];
+  return behs.map(function(b){
+    const s=scores[b.i];
+    const pct=s!=null?(s/3)*100:0;
+    const scoreColor=s===3?"#15803d":s===2?"#1d4ed8":s===1?"#dc2626":"#94a3b8";
+    const scoreVal=s!=null?s:"—";
+    return "<div class='beh-detail-item'>"
+      +"<div class='beh-detail-dot' style='background:"+b.c+"'></div>"
+      +"<span class='beh-detail-name'>"+b.lbl+"</span>"
+      +"<div class='beh-detail-bar'><div class='beh-detail-fill' style='width:"+pct+"%;background:"+b.c+"'></div></div>"
+      +"<span class='beh-detail-score' style='color:"+scoreColor+"'>"+scoreVal+"</span>"
+      +"</div>";
+  }).join("");
+}
+
 // ── Positions catalog ─────────────────────────────────────────────────────────
 const POSITIONS = ["AI Chef Sr Analyst", "AI Chef Team Leader", "AI Cheff Intern", "AI Culinary Scientist Manager", "AI Developer Chef Analyst", "AI Developer Chef Associate Analyst", "AI Developer Chef Sr Analyst", "AI Research Chef Analyst", "AI Research Chef Team Leader", "Account Payable & Treasury Sr Analyst", "Accounting & Treasury Manager", "Accounting Manager", "Accounting Sr Analyst", "Accounting and Consolidation Manager", "Accounts Payable & Treasury Analyst", "Accounts Payable Team Leader", "Analyst", "Analytics Associate Analyst", "Analytics Scientist II", "Assoc Analyst", "B2B Business Development Team Leader", "B2B Director", "B2B Scientist I", "B2B Scientist II", "B2B Sr. Scientist I", "B2B Team Leader", "BIOLOGICAL SCIENCES MANAGER", "Billing & Collection Sr Analyst (ARG + HQ)", "Billing & Collection Team Leader", "Brand Experience Analyst", "Brand Manager Team Leader Cono Sur", "Brand Sr Analyst", "Brand Team Leader", "Business Development Manager", "Business Excellence Team Leader", "Business Inteligence Manager", "CEO & Founder", "COMEX & Logistic Asocc Analyst", "COMEX Analyst", "COO & President", "CPFR Analyst", "CPFR Sr. Analyst", "CTO & Co-Founder", "Category Analyst", "Category Assoc Analyst", "Category Team Leader", "Chemical Sciences Team Leader", "Chief Financial Officer", "Chief Human Resources Officer", "Chief R&D Officer", "Cleaning Assistant Auxiliary", "Comex Sr Analyst", "Commercial Director Chile & Expansion", "Commercial Manager Chile", "Commercial Planning Sr Analyst", "Commercial Sr Manager", "Controller Manager", "Controller VP", "Copacker Sr Analyst", "Cost Sr Analyst", "Culinary Chef", "Culinary Director", "Customer Service Assoc Analyst", "Data Enginieering Intern", "Demand Planner Cost Logistic Sr. Analyst", "Demand Planner Team Leader", "Design Sr Analyst", "Designer Senior Manager", "Disruptive Innovation PMO Manager", "E-commerce Sr Analyst", "Expansion Brand Manager", "Export Sr. Analyst", "Facilities Manager", "Facility Management Analyst", "Field Sales Analyst", "Field Sales Executive Canal Moderno", "Finance Account Manager", "Finance Accounting Sr Analyst", "Finance Analyst", "Finance Assoc Analyst", "Finance Intern", "Finance Manager", "Finance Team Leader", "Finance, HR & Operations Director", "Financial Analyst", "Financial Planning Director", "Finish Goods Team Leader", "Food Science Director", "General Counsel Senior Director", "General Manager - Director", "Gestora Inclusión", "Giuseppe Adoption Team Leader", "Global Brand Sr. Manager", "Global Innovation Analyst", "Global Innovation Team Leader", "Global PBP Sr Manager", "Head of Product Management", "Inventory Sr Analyst", "Invoice Analyst", "JV Manager", "KAE Wholesalers & Distributors Sr. Analyst", "KAM E-Commerce Assoc Analyst", "KAM Food Service", "KAM Modern & Digital Sr. Analyst", "KAM Modern Sr. Analyst", "KAM Sr. Analyst", "KAM Team Leader", "KAM Tradicional, FS & Mayorista Team Leader", "Key Account Team Leader", "Kitchen Administrator Sr. Analyst", "LATAM Procurement Sr Manager", "Lead Product Designer", "Legal Manager", "Legal Team Leader", "Logistic Analyst", "Logistics & Customer Team Lead", "Logistics Assoc Analyst", "Logistics Customer Analyst", "Logistics Intern", "Logistics Team Leader", "MRP Analyst", "Machine Learning Engineer", "Machine Learning Engineer L2", "Machine Learning Engineer L3", "Machine Learning Engineer L4", "Machine Learning Engineer L5", "Machine Learning Engineering Manager", "Manufacturing Intern", "Manufacturing Manager", "Manufacturing Manager Conosur", "Manufacturing Sr Analyst", "Manufacturing Sr. Manager", "Manufacturing Team Leader", "Marketing & Trade Manager", "Marketing Analyst", "Marketing Assoc Analyst", "Marketing Intern", "Marketing Manager Conosur", "Marketing Sr Manager", "Marketing Sr. Analyst", "Marketing Team Leader", "Mexico Country Manager", "Microbiology Analyst", "Microbiology Associate Analyst", "Microbiology Scientist II", "Modern & Digital Manager", "Nutrition Scientist I", "Nutrition Scientist II", "Nutrition Technitian", "Office Manager / HR Coordinator - SF", "Operations Analyst", "Operations Manager", "Operations Sr. Analyst", "Order To Cash Associate Analyst", "PBP Sr Manager", "PBP Team Leader", "PMO Analyst", "PMO Intern", "PMO Team Leader", "Packaging Analyst", "Packaging Sr Manager", "Payroll Analyst", "People Auxiliary", "People Business Partner Assoc. Analyst", "People Experience & Tech HRBP Team Leader", "People Team Leader", "Pilot Technician", "Planning Associate Analyst", "Pleno Logistics Analyst", "Procurement Analyst", "Procurement Assoc. Analyst", "Procurement Manager", "Procurement Sr Analyst", "Procurement Team Leader", "Product Dev Sr Scientist I Meat & Dairy", "Product Developer Scientist II", "Product Development Scientist II", "Product Development Scientist II Dairy", "Product Development Sr Analyst", "Product Manager Analyst", "Product Manager Sr. Analyst", "Product Manager Team Leader", "Product Porfolio & Innovation Team Leader", "Product Portfolio & Innovation Analyst", "Product Sr Team Lead", "Product Team Leader", "Production Planning Team Leader", "Project Intern", "Project Management Sr Analyst", "Project Manager Team Leader", "Quality Analyst", "Quality Auditor Analyst", "Quality Auditor Sr Analyst", "Quality Intern", "Quality Management Associate Analyst", "Quality Management System Analyst in House", "Quality Manager", "Quality Team Leader", "R&D Analyst", "R&D Associate Analyst", "R&D B2B LATAM Manager", "R&D B2B VP Noram", "R&D Intern", "R&D Lead", "R&D Manager", "R&D Manager Meat & Dressings", "R&D PMO Manager", "R&D Sr Analyst", "R&D Sr Manager", "R&D Team Leader", "Research Sr Manager", "Retail Ops Sr. Analyst", "S&OP & Logistics Manager", "SAP & Cyber Security IT Team Leader", "SAP Data Master Sr Engineer", "Sales Analyst", "Sales Executive Analyst", "Sales Manager SP", "Sales Sr. Analyst", "Sales Sr. Executive", "Sales Sr. Manager Argentina", "Sales Team Leader", "Scalability Sr Analyst", "Scientist I, R&D Product Development", "Scientist II, AI Tech Application", "Senior Scientist I, AI Tech Application", "Senior Scientist I, Product Development", "Senior Team Leader, Product Developer", "Sensory Analyst", "Sensory Management, Scientist II", "Sensory Scientist I", "Sensory Scientist II", "Software Engineer", "Software Engineer Intern", "Software Engineer L1", "Software Engineer L2", "Software Engineer L3", "Software Engineer L5", "Software Engineer L7", "Software Engineer Sr. Team Leader", "Software Engineering Manager", "Software Engineering Team Leader", "Sr Analyst", "Sr Scientist I B2B", "Sr Software Engineer", "Sr. SAP Developer", "Sr. UX/UI Designer", "Strategic Growth Sr. Director", "Strategic Partnership Sr Analyst", "Strategic Partnership Team Leader", "Strategic Planning Sr. Manager", "Strategic Planning Team Leader", "Supply Chain & Operations Director", "Supply Chain Finance Team Leader", "Supply Planner Analyst", "Supply Planner Sr Analyst", "Talent Acquisition Senior Manager", "Top Line Manager", "Total Rewards Manager", "Trade Marketing Analyst", "Trade Marketing Team Leader", "Trade Sr. Analyst", "Transports Analyst", "Treasury Sr. Analyst", "UX & Product Sr. Manager", "VP Finance LATAM", "VP Foods LATAM", "VP Marketing Global", "VP, People - NORAM", "e-commerce executive"];
 const TENURE_MAP = {
@@ -1414,25 +1440,7 @@ function renderCard(p,cellKey){
           <canvas id="radarChart" width="190" height="190"></canvas>
         </div>
         <div class="beh-detail-list">
-          ${[
-            {lbl:"Iniciativa y liderazgo",i:0,c:"#3b82f6"},
-            {lbl:"Desarrollo de equipos",i:1,c:"#3b82f6"},
-            {lbl:"Orientación al feedback",i:2,c:"#8b5cf6"},
-            {lbl:"Aprendizaje continuo",i:3,c:"#8b5cf6"},
-            {lbl:"Pensamiento sistémico",i:4,c:"#f59e0b"},
-            {lbl:"Tolerancia a la ambigüedad",i:5,c:"#f59e0b"},
-            {lbl:"Capacidad de escucha",i:6,c:"#10b981"},
-            {lbl:"Habilidad comunicacional",i:7,c:"#10b981"},
-          ].map(b=>{
-            const s=scores[b.i];
-            const pct=s!=null?(s/3)*100:0;
-            return \`<div class="beh-detail-item">
-              <div class="beh-detail-dot" style="background:\${b.c}"></div>
-              <span class="beh-detail-name">\${b.lbl}</span>
-              <div class="beh-detail-bar"><div class="beh-detail-fill" style="width:\${pct}%;background:\${b.c}"></div></div>
-              <span class="beh-detail-score" style="color:\${s===3?'#15803d':s===2?'#1d4ed8':s===1?'#dc2626':'#94a3b8'}">\${s!=null?s:'—'}</span>
-            </div>\`;
-          }).join("")}
+          ${buildBehDetailList(scores)}
         </div>
       </div>
     </div>`:""}
