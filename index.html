@@ -53,6 +53,7 @@ button,select{font-family:inherit;cursor:pointer;outline:none}
 .dot:hover{transform:scale(1.28);z-index:5;position:relative}
 .dot.active{transform:scale(1.18);box-shadow:0 0 0 2.5px #1a1a1a,0 0 0 4.5px #6fcf5f;z-index:10;position:relative}
 .dot.kt{border:2px solid #f59e0b}
+.dot.evaluated{box-shadow:0 0 0 2px #6fcf5f}
 .cell-count{font-size:9px;color:#94a3b8;margin-top:auto}
 .x-labels{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:4px}
 .x-lbl{text-align:center;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8}
@@ -211,6 +212,7 @@ tr:hover td{background:#f8fafc}
         <div class="legend">
           <div class="leg-item"><div class="leg-dot" style="border:2px solid #f59e0b"></div>Key Talent</div>
           <div class="leg-item"><div class="leg-dot"></div>Click → ficha de carrera</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#6fcf5f;border:2px solid #166534"></div>Potencial evaluado</div>
         </div>
         <div class="grid-wrap">
           <div class="y-axis"><span class="y-lbl">Potencial ↑</span></div>
@@ -312,6 +314,10 @@ tr:hover td{background:#f8fafc}
     </div>
 
     <div class="pot-selector">
+      <label>Área:</label>
+      <select id="potAreaFilter" onchange="buildPotSelect()" style="min-width:180px">
+        <option value="">Todas las áreas</option>
+      </select>
       <label>Partner:</label>
       <select id="potPersonSelect" onchange="loadPotPerson()">
         <option value="">Seleccionar persona...</option>
@@ -466,16 +472,38 @@ let potScores = {s1:null,s2:null,s3:null,s4:null,s5:null,s6:null,s7:null,s8:null
 let potCurrentPerson = null;
 
 function buildPotSelect(){
+  // Build area filter
+  const areaSel = document.getElementById("potAreaFilter");
+  const currArea = areaSel ? areaSel.value : "";
+  if(areaSel && areaSel.options.length <= 1){
+    const areas = ["Todas las áreas",...Array.from(new Set(PARTNERS.map(p=>p.area))).filter(Boolean).sort()];
+    areaSel.innerHTML = "";
+    areas.forEach(a=>{const o=document.createElement("option");o.value=a==="Todas las áreas"?"":a;o.textContent=a;areaSel.appendChild(o);});
+    if(currArea) areaSel.value = currArea;
+  }
+  // Build person dropdown
   const sel = document.getElementById("potPersonSelect");
   const curr = sel.value;
   sel.innerHTML = '<option value="">Seleccionar persona...</option>';
-  [...PARTNERS].sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(p=>{
+  const areaFilter = areaSel ? areaSel.value : "";
+  const filtered = [...PARTNERS]
+    .filter(p => !areaFilter || p.area === areaFilter)
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  filtered.forEach(p=>{
     const o = document.createElement("option");
     o.value = p.nombre;
-    o.textContent = p.nombre + (p.area ? ` · ${p.area}` : "");
+    const evalTag = (p.pot_avg!==null&&p.pot_avg!==undefined) ? ` ✓` : "";
+    o.textContent = p.nombre + evalTag;
     if(p.nombre === curr) o.selected = true;
     sel.appendChild(o);
   });
+  // Reset form if selected person not in filtered list
+  if(curr && !filtered.find(p=>p.nombre===curr)){
+    document.getElementById("potForm").style.display="none";
+    document.getElementById("potPersonInfo").style.display="none";
+    document.getElementById("savePotBtn").style.display="none";
+    potCurrentPerson=null;
+  }
 }
 
 function loadPotPerson(){
@@ -610,6 +638,7 @@ async function savePotencial(){
       potCurrentPerson=PARTNERS[idx];
     }
     renderGrid(); // refresh ninebox
+    buildPotSelect(); // refresh checkmarks
     setSyncPill("ok");
   }catch(e){setSyncPill("err");}
   if(btn)btn.disabled=false;
@@ -674,8 +703,11 @@ function renderGrid(){
       const dw=cell.querySelector(`#dw-${k}`);
       ppl.forEach(p=>{
         const d=document.createElement("div");const isKT=(p.talent||"").toLowerCase().includes("key talent");
-        d.className="dot"+(isKT?" kt":"")+(activeName===p.nombre?" active":"");
-        d.style.background=gc(p.nombre);d.textContent=ini(p.nombre);d.title=p.nombre;
+        const hasEval=p.pot_avg!==null&&p.pot_avg!==undefined;
+        d.className="dot"+(isKT?" kt":"")+(activeName===p.nombre?" active":"")+(hasEval?" evaluated":"");
+        d.style.background=hasEval?"#166534":gc(p.nombre);
+        d.title=p.nombre+(hasEval?` · Potencial: ${Number(p.pot_avg).toFixed(2)} (${p.pot_class})`:" · Sin evaluación");
+        d.textContent=ini(p.nombre);
         d.addEventListener("click",()=>selectPerson(p.nombre,k));dw.appendChild(d);
       });
       if(!ppl.length){const e=document.createElement("span");e.style.cssText="font-size:10px;color:#94a3b8;opacity:.4";e.textContent="—";dw.appendChild(e);}
