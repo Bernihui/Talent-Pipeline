@@ -409,16 +409,31 @@ tr:hover td{background:#f8fafc}
 
 <script>
 const SB_URL="https://sbfvtyidzqfphngiavlt.supabase.co";
-const SB_KEY="sb_publishable_acY7A-WcLtFhf9Ka_PmlgA_67tsrNkD";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiZnZ0eWlkenFmcGhuZ2lhdmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMjQ4ODUsImV4cCI6MjA4OTcwMDg4NX0.WqERaxrqnw7ubXf593pyyjbbQW9sZt_jZYaV7Na--_k";
 
 async function sbGet(table,filter=""){
-  const r=await fetch(`${SB_URL}/rest/v1/${table}${filter}`,{headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`}});
-  if(!r.ok)throw new Error(await r.text());
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${filter}`,{
+    headers:{
+      "apikey":SB_KEY,
+      "Authorization":`Bearer ${SB_KEY}`,
+      "Content-Type":"application/json"
+    }
+  });
+  if(!r.ok){const t=await r.text();throw new Error(t);}
   return r.json();
 }
 async function sbUpsert(table,data){
-  const r=await fetch(`${SB_URL}/rest/v1/${table}`,{method:"POST",headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=representation"},body:JSON.stringify(data)});
-  if(!r.ok)throw new Error(await r.text());
+  const r=await fetch(`${SB_URL}/rest/v1/${table}`,{
+    method:"POST",
+    headers:{
+      "apikey":SB_KEY,
+      "Authorization":`Bearer ${SB_KEY}`,
+      "Content-Type":"application/json",
+      "Prefer":"resolution=merge-duplicates,return=representation"
+    },
+    body:JSON.stringify(data)
+  });
+  if(!r.ok){const t=await r.text();throw new Error(t);}
   return r.json();
 }
 
@@ -748,6 +763,8 @@ async function loadAll(){
   }catch(e){
     setSyncPill("err");
     document.getElementById("nbLoading").innerHTML=`<span style="color:#dc2626;font-size:12px">Error al cargar: ${e.message}</span>`;
+    document.getElementById("nbLoading").style.display="flex";
+    console.error("Load error:",e);
   }
 }
 
