@@ -104,6 +104,48 @@ select.sf:focus{outline:none;border-color:#6fcf5f}
 .comp-val{font-size:11px;font-weight:700;min-width:24px;text-align:right}
 .save-row{display:flex;align-items:center;justify-content:flex-end;margin-top:12px}
 .save-note{font-size:10px;color:#94a3b8;margin-top:5px;text-align:right}
+/* New card design */
+.card-header{background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);border-radius:12px;padding:18px;margin-bottom:10px;color:#fff}
+.card-header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.card-avatar-lg{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.card-hname{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.card-hrole{font-size:11px;color:#94a3b8;margin-top:2px}
+.card-hbadges{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.card-hbadge{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}
+.card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
+.card-meta-item label{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin-bottom:2px}
+.card-meta-item span{font-size:11px;color:#e5e7eb;font-weight:500}
+.card-pot-badge{text-align:right}
+.card-pot-badge .pot-num{font-size:28px;font-weight:700;line-height:1}
+.card-pot-badge .pot-lbl{font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:.06em}
+.card-pot-badge .pot-cls{font-size:11px;font-weight:600;margin-top:2px}
+/* Plans */
+.plans-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.plan-card{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden}
+.plan-card.plan-a{border-color:#3b82f644}
+.plan-card.plan-b{border-color:#f59e0b44}
+.plan-hdr{padding:10px 13px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px}
+.plan-hdr h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.plan-body{padding:12px 13px;display:flex;flex-direction:column;gap:8px}
+.plan-step{display:flex;align-items:flex-start;gap:8px}
+.plan-step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.plan-step-content{flex:1}
+.plan-step-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}
+.plan-step-select{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;font-family:inherit;font-size:11px;color:#1e293b;background:#fff}
+.plan-step-select:focus{outline:none;border-color:#6fcf5f}
+.plan-step-input{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;font-family:inherit;font-size:11px;color:#94a3b8;background:#fff;font-style:italic}
+.plan-step-input:focus{outline:none;border-color:#6fcf5f;color:#1e293b;font-style:normal}
+/* Radar */
+.radar-section{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:10px;overflow:hidden}
+.radar-body{padding:12px 13px;display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start}
+.radar-canvas-wrap{display:flex;align-items:center;justify-content:center}
+.beh-detail-list{display:flex;flex-direction:column;gap:5px}
+.beh-detail-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:#f8fafc}
+.beh-detail-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.beh-detail-name{font-size:11px;color:#475569;flex:1}
+.beh-detail-score{font-size:12px;font-weight:700;min-width:20px;text-align:right}
+.beh-detail-bar{flex:1;height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden;max-width:80px}
+.beh-detail-fill{height:100%;border-radius:2px}
 /* Admin */
 .admin-layout{flex:1;padding:20px;overflow-y:auto}
 .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
@@ -769,69 +811,627 @@ function renderGrid(){
   document.getElementById("stats").innerHTML=[{l:"Top Talent",v:tt,c:"#15803d"},{l:"Key Talents",v:kt,c:"#a16207"},{l:"Role Models",v:rm,c:"#6d28d9"},{l:"Desalineados",v:des,c:"#dc2626"}].map(s=>`<div class="stat" style="border-left-color:${s.c}"><div class="stat-n" style="color:${s.c}">${s.v}</div><div class="stat-l">${s.l}</div></div>`).join("");
 }
 
-function selectPerson(name,cellKey){activeName=name;renderGrid();const p=PARTNERS.map(merged).find(d=>d.nombre===name);if(p)renderCard(p,cellKey);}
+function selectPerson(name,cellKey){
+  activeName=name;renderGrid();
+  const p=PARTNERS.map(merged).find(d=>d.nombre===name);
+  if(p){
+    renderCard(p,cellKey);
+    // Draw radar after DOM is ready
+    setTimeout(()=>{
+      const scores=[p.pot_score_1,p.pot_score_2,p.pot_score_3,p.pot_score_4,p.pot_score_5,p.pot_score_6,p.pot_score_7,p.pot_score_8];
+      if(scores.some(s=>s!=null)) drawRadar(scores);
+    },50);
+  }
+}
+
+
+// ── Positions catalog ─────────────────────────────────────────────────────────
+const POSITIONS = ["AI Chef Sr Analyst", "AI Chef Team Leader", "AI Cheff Intern", "AI Culinary Scientist Manager", "AI Developer Chef Analyst", "AI Developer Chef Associate Analyst", "AI Developer Chef Sr Analyst", "AI Research Chef Analyst", "AI Research Chef Team Leader", "Account Payable & Treasury Sr Analyst", "Accounting & Treasury Manager", "Accounting Manager", "Accounting Sr Analyst", "Accounting and Consolidation Manager", "Accounts Payable & Treasury Analyst", "Accounts Payable Team Leader", "Analyst", "Analytics Associate Analyst", "Analytics Scientist II", "Assoc Analyst", "B2B Business Development Team Leader", "B2B Director", "B2B Scientist I", "B2B Scientist II", "B2B Sr. Scientist I", "B2B Team Leader", "BIOLOGICAL SCIENCES MANAGER", "Billing & Collection Sr Analyst (ARG + HQ)", "Billing & Collection Team Leader", "Brand Experience Analyst", "Brand Manager Team Leader Cono Sur", "Brand Sr Analyst", "Brand Team Leader", "Business Development Manager", "Business Excellence Team Leader", "Business Inteligence Manager", "CEO & Founder", "COMEX & Logistic Asocc Analyst", "COMEX Analyst", "COO & President", "CPFR Analyst", "CPFR Sr. Analyst", "CTO & Co-Founder", "Category Analyst", "Category Assoc Analyst", "Category Team Leader", "Chemical Sciences Team Leader", "Chief Financial Officer", "Chief Human Resources Officer", "Chief R&D Officer", "Cleaning Assistant Auxiliary", "Comex Sr Analyst", "Commercial Director Chile & Expansion", "Commercial Manager Chile", "Commercial Planning Sr Analyst", "Commercial Sr Manager", "Controller Manager", "Controller VP", "Copacker Sr Analyst", "Cost Sr Analyst", "Culinary Chef", "Culinary Director", "Customer Service Assoc Analyst", "Data Enginieering Intern", "Demand Planner Cost Logistic Sr. Analyst", "Demand Planner Team Leader", "Design Sr Analyst", "Designer Senior Manager", "Disruptive Innovation PMO Manager", "E-commerce Sr Analyst", "Expansion Brand Manager", "Export Sr. Analyst", "Facilities Manager", "Facility Management Analyst", "Field Sales Analyst", "Field Sales Executive Canal Moderno", "Finance Account Manager", "Finance Accounting Sr Analyst", "Finance Analyst", "Finance Assoc Analyst", "Finance Intern", "Finance Manager", "Finance Team Leader", "Finance, HR & Operations Director", "Financial Analyst", "Financial Planning Director", "Finish Goods Team Leader", "Food Science Director", "General Counsel Senior Director", "General Manager - Director", "Gestora Inclusión", "Giuseppe Adoption Team Leader", "Global Brand Sr. Manager", "Global Innovation Analyst", "Global Innovation Team Leader", "Global PBP Sr Manager", "Head of Product Management", "Inventory Sr Analyst", "Invoice Analyst", "JV Manager", "KAE Wholesalers & Distributors Sr. Analyst", "KAM E-Commerce Assoc Analyst", "KAM Food Service", "KAM Modern & Digital Sr. Analyst", "KAM Modern Sr. Analyst", "KAM Sr. Analyst", "KAM Team Leader", "KAM Tradicional, FS & Mayorista Team Leader", "Key Account Team Leader", "Kitchen Administrator Sr. Analyst", "LATAM Procurement Sr Manager", "Lead Product Designer", "Legal Manager", "Legal Team Leader", "Logistic Analyst", "Logistics & Customer Team Lead", "Logistics Assoc Analyst", "Logistics Customer Analyst", "Logistics Intern", "Logistics Team Leader", "MRP Analyst", "Machine Learning Engineer", "Machine Learning Engineer L2", "Machine Learning Engineer L3", "Machine Learning Engineer L4", "Machine Learning Engineer L5", "Machine Learning Engineering Manager", "Manufacturing Intern", "Manufacturing Manager", "Manufacturing Manager Conosur", "Manufacturing Sr Analyst", "Manufacturing Sr. Manager", "Manufacturing Team Leader", "Marketing & Trade Manager", "Marketing Analyst", "Marketing Assoc Analyst", "Marketing Intern", "Marketing Manager Conosur", "Marketing Sr Manager", "Marketing Sr. Analyst", "Marketing Team Leader", "Mexico Country Manager", "Microbiology Analyst", "Microbiology Associate Analyst", "Microbiology Scientist II", "Modern & Digital Manager", "Nutrition Scientist I", "Nutrition Scientist II", "Nutrition Technitian", "Office Manager / HR Coordinator - SF", "Operations Analyst", "Operations Manager", "Operations Sr. Analyst", "Order To Cash Associate Analyst", "PBP Sr Manager", "PBP Team Leader", "PMO Analyst", "PMO Intern", "PMO Team Leader", "Packaging Analyst", "Packaging Sr Manager", "Payroll Analyst", "People Auxiliary", "People Business Partner Assoc. Analyst", "People Experience & Tech HRBP Team Leader", "People Team Leader", "Pilot Technician", "Planning Associate Analyst", "Pleno Logistics Analyst", "Procurement Analyst", "Procurement Assoc. Analyst", "Procurement Manager", "Procurement Sr Analyst", "Procurement Team Leader", "Product Dev Sr Scientist I Meat & Dairy", "Product Developer Scientist II", "Product Development Scientist II", "Product Development Scientist II Dairy", "Product Development Sr Analyst", "Product Manager Analyst", "Product Manager Sr. Analyst", "Product Manager Team Leader", "Product Porfolio & Innovation Team Leader", "Product Portfolio & Innovation Analyst", "Product Sr Team Lead", "Product Team Leader", "Production Planning Team Leader", "Project Intern", "Project Management Sr Analyst", "Project Manager Team Leader", "Quality Analyst", "Quality Auditor Analyst", "Quality Auditor Sr Analyst", "Quality Intern", "Quality Management Associate Analyst", "Quality Management System Analyst in House", "Quality Manager", "Quality Team Leader", "R&D Analyst", "R&D Associate Analyst", "R&D B2B LATAM Manager", "R&D B2B VP Noram", "R&D Intern", "R&D Lead", "R&D Manager", "R&D Manager Meat & Dressings", "R&D PMO Manager", "R&D Sr Analyst", "R&D Sr Manager", "R&D Team Leader", "Research Sr Manager", "Retail Ops Sr. Analyst", "S&OP & Logistics Manager", "SAP & Cyber Security IT Team Leader", "SAP Data Master Sr Engineer", "Sales Analyst", "Sales Executive Analyst", "Sales Manager SP", "Sales Sr. Analyst", "Sales Sr. Executive", "Sales Sr. Manager Argentina", "Sales Team Leader", "Scalability Sr Analyst", "Scientist I, R&D Product Development", "Scientist II, AI Tech Application", "Senior Scientist I, AI Tech Application", "Senior Scientist I, Product Development", "Senior Team Leader, Product Developer", "Sensory Analyst", "Sensory Management, Scientist II", "Sensory Scientist I", "Sensory Scientist II", "Software Engineer", "Software Engineer Intern", "Software Engineer L1", "Software Engineer L2", "Software Engineer L3", "Software Engineer L5", "Software Engineer L7", "Software Engineer Sr. Team Leader", "Software Engineering Manager", "Software Engineering Team Leader", "Sr Analyst", "Sr Scientist I B2B", "Sr Software Engineer", "Sr. SAP Developer", "Sr. UX/UI Designer", "Strategic Growth Sr. Director", "Strategic Partnership Sr Analyst", "Strategic Partnership Team Leader", "Strategic Planning Sr. Manager", "Strategic Planning Team Leader", "Supply Chain & Operations Director", "Supply Chain Finance Team Leader", "Supply Planner Analyst", "Supply Planner Sr Analyst", "Talent Acquisition Senior Manager", "Top Line Manager", "Total Rewards Manager", "Trade Marketing Analyst", "Trade Marketing Team Leader", "Trade Sr. Analyst", "Transports Analyst", "Treasury Sr. Analyst", "UX & Product Sr. Manager", "VP Finance LATAM", "VP Foods LATAM", "VP Marketing Global", "VP, People - NORAM", "e-commerce executive"];
+const TENURE_MAP = {
+  "Adrián Soto Suárez": "1 year and 26 days",
+  "Agostina Chiappetta": "1 year, 10 months and 16 days",
+  "Agustina Di Corinto": "4 years, 6 months and 16 days",
+  "Agustina Pederiva": "5 months and 4 days",
+  "Agustin Krebs": "3 years and 18 days",
+  "Alain Descazeaux": "6 years, 2 months and 2 days",
+  "Alejandra Noriega": "1 year, 10 months and 2 days",
+  "Alejandra Peña": "2 years and 28 days",
+  "Alfredo Medina": "1 year, 7 months and 28 days",
+  "Aliane Bernardes de Andrade": "6 years, 9 months and 28 days",
+  "Alisia Heath": "2 years, 2 months and 19 days",
+  "Alondra Garcia Loarte": "3 years and 23 days",
+  "Alonso Ignacio Vargas Estay": "2 years and 5 days",
+  "Amaia Juanchuto Belmar": "2 years, 5 months and 12 days",
+  "Amanda Morais": "4 years, 4 months and 13 days",
+  "Ana Batista": "5 years, 7 months and 10 days",
+  "Ana Carvalho": "1 month and 6 days",
+  "Ana Karina Rodriguez": "11 months and 1 day",
+  "Ana Paula De La Torre": "6 months and 28 days",
+  "Anderson Da Silva Ramalho": "4 years, 2 months and 19 days",
+  "Andrea Aranda": "2 months and 24 days",
+  "Andrea Cardenas": "9 months and 29 days",
+  "Andrea González Pozo": "11 months and 22 days",
+  "Andrea Lago": "2 months and 13 days",
+  "Andres Cerda": "4 months and 4 days",
+  "Andrew Cummings": "3 years, 9 months and 9 days",
+  "Angela Toomer": "3 years, 10 months and 13 days",
+  "Angeline Ivette Riquelme": "6 years, 2 months and 9 days",
+  "Antonela Alvarez": "3 years, 9 months and 16 days",
+  "Antonia Puentes": "8 months and 15 days",
+  "Antonia Stevens": "2 months and 24 days",
+  "Ariadna Fernandez": "4 years, 2 months and 26 days",
+  "Ariel Perez": "2 years, 5 months and 20 days",
+  "Arthur Elias": "11 months and 22 days",
+  "Azul Lefebvre": "1 year, 7 months and 19 days",
+  "Barbara Bianchi": "4 years, 1 month and 22 days",
+  "Barbara Espinoza": "6 months and 7 days",
+  "Barbara Valenzuela": "3 years, 7 months and 28 days",
+  "Bautista Bulfon": "2 months and 17 days",
+  "Beatriz Schuttoff de Mello Barreto": "2 years and 21 days",
+  "Beatriz Vieira da Cunha Arantes": "4 years and 26 days",
+  "Becky Reith": "1 year, 7 months and 17 days",
+  "Benjamin Ian Earle": "3 years, 2 months and 26 days",
+  "Bernardita Huidobro": "3 months and 28 days",
+  "Bernardita San Martin Abarca": "1 year, 5 months and 23 days",
+  "Bernardo Moltedo": "5 years, 6 months and 28 days",
+  "Bruna Barros Rodrigues": "1 year, 11 months and 26 days",
+  "Bruno Sepulveda Orellana": "4 years, 10 months and 19 days",
+  "Bryce Mooney": "2 years, 9 months and 29 days",
+  "Byron Fernando Riffo": "2 years, 1 month and 26 days",
+  "Cami Espina": "1 year, 7 months and 24 days",
+  "Camila Anastassia Covarrubias": "6 years, 1 month and 5 days",
+  "Camila Fernanda González": "2 years, 7 months and 8 days",
+  "Camila Francisco": "6 years, 4 months and 25 days",
+  "Camila Marino": "3 years, 11 months and 1 day",
+  "Camila Souto": "2 months and 10 days",
+  "Camila Souza": "7 months and 4 days",
+  "Camila Varas": "9 months and 27 days",
+  "Candelaria Noceti": "1 year, 8 months and 27 days",
+  "Carla Diana Pino": "6 years, 10 months and 9 days",
+  "Carlos Alberto Rojas": "2 years, 5 months and 1 day",
+  "Carlos Chavez": "1 year, 3 months and 20 days",
+  "Carlos Priego": "9 months and 27 days",
+  "Carlos Vilches": "6 months and 21 days",
+  "Carlos Villanueva": "3 years, 4 months and 27 days",
+  "Carmen Gloria Ferrada": "4 years, 3 months and 13 days",
+  "Carolina Abigail Paduro": "1 year, 2 months and 28 days",
+  "Carolina Acosta Calderon": "4 years, 6 months and 16 days",
+  "Carolina Andrea Pérez": "2 years, 3 months and 7 days",
+  "Carolina Frias": "4 months",
+  "Carolina Pinto": "1 year, 2 months and 23 days",
+  "Carolina Tinnirello": "4 months and 26 days",
+  "Catalina Donoso": "6 years, 6 months and 4 days",
+  "Catalina Larrain": "1 year, 8 months and 14 days",
+  "Catalina Pelet Abeleida": "2 years, 3 months and 13 days",
+  "Catalina Poblete": "4 months and 15 days",
+  "Catalina Rondineau": "4 years, 6 months and 9 days",
+  "Caterina Daniela Vargas": "3 years, 3 months and 4 days",
+  "Catriel Giuliano": "6 years, 1 month and 14 days",
+  "Cecilia Kainz": "3 years, 10 months and 20 days",
+  "Cecilia Olcese": "7 months and 25 days",
+  "Cecilia Pato Vionnet": "4 years, 11 months and 10 days",
+  "Cesar Oswaldo Avancini": "2 years, 4 months and 1 day",
+  "Clara Silva Di Cunto": "5 years and 21 days",
+  "Claudia Andrea Vidal": "3 years, 7 months and 17 days",
+  "Clemente Jose Ramirez": "7 months and 14 days",
+  "Constanza Anania": "3 years, 5 months and 5 days",
+  "Constanza Diaz": "10 months and 6 days",
+  "Constanza Francisca Ruiz Bustos": "3 years, 5 months and 14 days",
+  "Constanza Fuentealba": "3 years, 1 month and 9 days",
+  "Constanza Mora": "2 years, 10 months and 7 days",
+  "Constanza Navarro Abbott": "8 months and 8 days",
+  "Cristián D'Alençon": "10 months and 6 days",
+  "Cristian Guillermo Carrasco": "3 years, 11 months and 25 days",
+  "Cristian Vivanco": "27 days",
+  "Cristian Yam Tsi Li-Jo": "2 years, 7 months and 23 days",
+  "Cristobal Fernandez": "1 year, 2 months and 22 days",
+  "Daniela Bruzzone": "4 months and 12 days",
+  "Daniela Constanza Muñoz": "2 years, 8 months and 8 days",
+  "Daniela Miracula": "3 years and 22 days",
+  "Daniela Monje": "1 year, 5 months and 29 days",
+  "Daniela Reyes Callejas": "6 days",
+  "Daniela Vivanco": "1 year, 6 months and 29 days",
+  "Daniele Martins": "7 months and 25 days",
+  "Daniel Juárez Peña": "3 years, 5 months and 26 days",
+  "Daniel Pacheco": "1 year, 1 month and 5 days",
+  "Daniel Saad": "1 month and 20 days",
+  "David Daniel Torres": "5 years, 6 months and 15 days",
+  "David Gabriel Moya": "6 years, 8 months and 28 days",
+  "Dayse Da Silva Ruano": "6 years, 2 months and 20 days",
+  "Delfina Stolbizer": "1 year, 11 months and 6 days",
+  "Desireé Castaño": "7 months and 25 days",
+  "Diego Alonso Fernandez": "3 years, 1 month and 23 days",
+  "Diego Andrés Piña": "2 years, 5 months and 3 days",
+  "Diego Araneda": "3 years, 3 months and 26 days",
+  "Diego Ignacio Gomez": "2 years, 4 months and 5 days",
+  "Diego Jara Toro": "8 months and 13 days",
+  "Dominique Soto": "2 months and 16 days",
+  "Doris Soledad Lefian": "6 years, 10 months and 23 days",
+  "Dulce Vazquez": "2 months and 17 days",
+  "Edgar Bernal": "9 months and 27 days",
+  "Edmundo Lutter": "4 years, 3 months and 23 days",
+  "Elena Consuelo Coello": "2 years, 7 months and 23 days",
+  "Elena Yepes": "10 months and 17 days",
+  "Elisabete Aparecida Fracarolli": "2 years and 18 days",
+  "Emily Heckman": "6 months and 13 days",
+  "Eric Kinjo": "3 years, 9 months and 29 days",
+  "Esteban Andres Canessa": "4 years, 2 months and 15 days",
+  "Ethan Paixão de Souza": "1 year, 10 months and 23 days",
+  "Evelyn Gallegos": "5 years, 6 months and 28 days",
+  "Ezequiel Fourcade": "6 years, 5 months and 22 days",
+  "Ezequiel Sarni": "2 years and 7 months",
+  "Fabiana Bruno Magnasco": "5 years, 6 months and 8 days",
+  "Fabián Andrés Tala": "3 years, 7 months and 5 days",
+  "Facundo Devalle": "1 year, 8 months and 29 days",
+  "Federico Filipelli": "6 years, 6 months and 11 days",
+  "Federico Padin": "3 years, 9 months and 16 days",
+  "Felipe Andrés Alfero": "2 years, 5 months and 10 days",
+  "Felipe Cisternas": "1 year, 7 months and 28 days",
+  "Felipe Correa": "1 year, 6 months and 13 days",
+  "Felipe Ignacio Oyarce": "6 years and 8 days",
+  "Felipe Labbe": "8 months and 9 days",
+  "Felipe Orlando Rivera Droguett": "2 years, 4 months and 9 days",
+  "Felipe Rodrigues Su": "6 years, 2 months and 17 days",
+  "Felipe Torralba": "2 months and 24 days",
+  "Felipe Zamora": "2 months and 17 days",
+  "Fernanda Anguita": "2 years, 2 months and 25 days",
+  "Fernanda Rocha Rosati": "5 years, 6 months and 28 days",
+  "Fernando De La Huerta Alvarez": "3 years, 11 months and 22 days",
+  "Florencia Diaz": "1 year and 4 days",
+  "Florencia Villagra": "4 years, 3 months and 16 days",
+  "Francesca Tiare Albonico": "7 years and 28 days",
+  "Francisca Borquez Soto": "1 year, 5 months and 24 days",
+  "Francisca Josefa Uriarte": "2 years, 8 months and 11 days",
+  "Francisca Lathrop": "2 years and 7 days",
+  "Francisca Macarena Canales": "2 years, 8 months and 21 days",
+  "Francisco Clavero": "5 years, 9 months and 28 days",
+  "Francisco Javier Zamorano": "2 years, 4 months and 5 days",
+  "Francisco Lizana": "27 days",
+  "Francisco Morrison": "1 month and 20 days",
+  "Francisco Sanchez": "2 years and 11 months",
+  "Franco Álvarez Rosinelli": "4 months and 26 days",
+  "Gabriela Dudu Moreira": "4 years, 8 months and 17 days",
+  "Gabriela Hernandez": "4 years, 10 months and 26 days",
+  "Gabriel Alexis Bastias": "5 years, 5 months and 28 days",
+  "Gabriel Gerosevich": "2 years, 4 months and 8 days",
+  "Gabriel Pardo": "1 year, 11 months and 18 days",
+  "Gabriel Zapata": "2 months and 24 days",
+  "Gaston Lugo": "3 years, 4 months and 15 days",
+  "Genaro Santolin": "3 years, 3 months and 10 days",
+  "George Michel Tamayo": "1 year, 9 months and 26 days",
+  "Georgina Cecilia Urrutia": "7 years, 3 months and 19 days",
+  "Gianfranco Di Battista": "2 years, 9 months and 27 days",
+  "Ginette Del Valle Linares": "4 years, 1 month and 8 days",
+  "Gislaine Aparecida Ortigoza": "6 years, 3 months and 27 days",
+  "Giulia Danesi": "8 months and 19 days",
+  "Gonzalo Pla": "5 months and 9 days",
+  "Griffin Boutwell": "3 years, 9 months and 29 days",
+  "Hector Henriquez": "6 years and 19 days",
+  "Helen Tibisay Caruci": "4 years, 3 months and 28 days",
+  "Hengel Vilela Caxile": "3 years and 9 days",
+  "Humberto José Ortúzar": "3 years, 2 months and 10 days",
+  "Ignacio Cuevas": "6 months and 21 days",
+  "Ignacio Nuñez": "3 years, 11 months and 25 days",
+  "Ines Gnecco": "2 years, 7 months and 1 day",
+  "Ingrid Constanza Morales Navarro": "1 year and 17 days",
+  "Isabel Carolina Silva": "3 years, 6 months and 29 days",
+  "Isabella Cherubini": "2 months and 16 days",
+  "Isabel Ortiz Von Riegen": "1 year, 5 months and 8 days",
+  "Isidora Camus": "2 years and 11 days",
+  "Ivan dos Santos Rodrigues": "4 years, 1 month and 8 days",
+  "Jaime Moreno": "10 months and 24 days",
+  "Janaina Freri Lucas": "4 years, 11 months and 3 days",
+  "Javier": "6 years, 1 month and 3 days",
+  "Javiera Dalila Saldaña": "2 years, 10 months and 29 days",
+  "Javiera Francisca Manterola": "2 years, 5 months and 25 days",
+  "Javiera Gonzalez": "2 years, 2 months and 14 days",
+  "Javiera Irarrazabal": "1 year, 3 months and 12 days",
+  "Javiera Mujica": "7 years, 2 months and 8 days",
+  "Javiera Pizarro": "2 months and 17 days",
+  "Javiera Valentina Garces": "5 years, 11 months and 28 days",
+  "Jeronimo Sanabria": "1 year, 5 months and 26 days",
+  "Joaquin Manzo": "2 months and 10 days",
+  "Joaquin Ricci": "3 years, 7 months and 22 days",
+  "Johan Esteban Meza": "4 years and 24 days",
+  "Jorge Booth": "4 years, 11 months and 24 days",
+  "Jorge Gatica": "6 years and 27 days",
+  "Jorgelina Farina": "2 months and 10 days",
+  "Jorge Luis Perez": "1 year and 21 days",
+  "José Carlos Caris": "4 years and 20 days",
+  "Josefa Linderman": "9 months and 6 days",
+  "Josefina Irigoyen": "4 months and 28 days",
+  "Josefina Platovsky Mingo": "4 years, 6 months and 14 days",
+  "Jose Luis Bustos": "2 years, 2 months and 27 days",
+  "Jose Luis Chiarenza": "3 years, 6 months and 10 days",
+  "Jose Manuel Madriaza": "1 year, 3 months and 16 days",
+  "Jose Maria Lasa Sendic": "2 years, 10 months and 14 days",
+  "Jose Menendez": "6 years, 10 months and 27 days",
+  "Jose Miguel Orostegui": "5 years, 6 months and 24 days",
+  "José Ramón Loaiza": "4 years, 3 months and 16 days",
+  "Jose Tomas Escobar": "2 years, 6 months and 5 days",
+  "Juan Andres Moreno": "4 years and 9 months",
+  "Juan Jose Pinto": "1 year, 1 month and 29 days",
+  "Juan López": "4 months and 1 day",
+  "Juan Pablo Quinterno": "4 years, 2 months and 17 days",
+  "Juan Papayoanu": "1 year, 4 months and 18 days",
+  "Julia Christin Berning": "5 years, 7 months and 10 days",
+  "Juliana Kossling": "2 years, 2 months and 14 days",
+  "Julian Andres Moreno": "1 year and 7 months",
+  "Julieta Irigoyen": "3 years and 29 days",
+  "Julieta Naso": "1 year, 5 months and 16 days",
+  "Julieta Remollino": "1 year, 9 months and 19 days",
+  "Julio Monter": "2 years, 9 months and 14 days",
+  "Karim Pichara": "8 years, 3 months and 28 days",
+  "Karla Gonzalez": "2 months and 10 days",
+  "Karyn Perez": "6 years and 5 months",
+  "Lara Rusak": "4 years and 8 days",
+  "Larissa Lidiaque": "5 months and 28 days",
+  "Laura Quevedo Antonioli": "4 years, 6 months and 21 days",
+  "Laura Rezende": "3 months and 21 days",
+  "Laura Rodriguez": "3 years, 8 months and 11 days",
+  "Lena Jankowiak": "3 years, 11 months and 2 days",
+  "Leticia Chalde": "1 year, 11 months and 26 days",
+  "Lourdes Ghersi": "6 years, 2 months and 16 days",
+  "Luana Farias": "3 years, 4 months and 1 day",
+  "Luana Moura": "1 year, 3 months and 28 days",
+  "Lucas Bacelo": "1 year, 3 months and 28 days",
+  "Lucas Herrero": "1 year, 7 months and 12 days",
+  "Lucas Lagos": "4 months and 28 days",
+  "Luciana Neves": "2 years, 1 month and 10 days",
+  "Luciano Dugaim Paschoali": "2 years, 2 months and 19 days",
+  "Luciano Vizdal": "10 months and 14 days",
+  "Lucía Tamburro": "1 year, 8 months and 28 days",
+  "Lucia Visconti": "10 months and 24 days",
+  "Luis Alberto Cancino": "5 years, 7 months and 20 days",
+  "Luis Andres Vergara": "1 year and 26 days",
+  "Luis Guiza": "2 years and 28 days",
+  "Mabel Trujillo": "5 months and 23 days",
+  "Macarena Cantero Cherres": "2 years, 8 months and 26 days",
+  "Macarena Zañartu": "3 years, 3 months and 13 days",
+  "Maia Bhaumik": "1 year and 19 days",
+  "Majo Bastianello": "4 years, 7 months and 6 days",
+  "Manuel Céspedes": "2 months and 24 days",
+  "Manuel Lopez Revol": "4 years, 3 months and 16 days",
+  "Manuel Villa": "1 year, 4 months and 13 days",
+  "Margaret Gamboa": "7 months and 28 days",
+  "Maria Celeste Dichano": "6 months and 28 days",
+  "Maria De Las Mercedes Fuster": "3 years and 29 days",
+  "Maria Elena Concha": "5 years and 28 days",
+  "Maria Eugenia Gongora": "3 years, 3 months and 10 days",
+  "Maria Fernanda Koumian": "3 months and 15 days",
+  "Maria Florencia Kochnowicz": "4 years, 6 months and 9 days",
+  "María José Correa": "2 years, 1 month and 3 days",
+  "Maria Jose Ramirez": "3 years, 4 months and 27 days",
+  "Mariana Brizzio": "4 years, 2 months and 12 days",
+  "Mariano Moscato": "1 year, 7 months and 27 days",
+  "Maria Pia Speciali": "4 years, 6 months and 23 days",
+  "Maria Veronica Morales": "6 years, 5 months and 12 days",
+  "Maria Victoria Enriques": "3 years, 7 months and 18 days",
+  "Mariela Paz Elorrieta": "3 years, 8 months and 25 days",
+  "Marina Frias": "4 years, 1 month and 15 days",
+  "Marina Leme": "1 year, 2 months and 21 days",
+  "Mario Villalobos": "11 months and 28 days",
+  "Marisol Pizarro": "3 years, 11 months and 9 days",
+  "Martina Buscio": "11 months and 20 days",
+  "Martina Ortiz Siri": "2 months and 3 days",
+  "Martin Bergada": "4 years, 6 months and 28 days",
+  "Martin Bertoncini": "3 years and 3 days",
+  "Martin Meza": "3 months and 28 days",
+  "Matias Alvarez": "2 months and 24 days",
+  "Matias Antiñanco": "7 months and 18 days",
+  "Matías Del Franco": "2 years, 4 months and 17 days",
+  "Matias Latugaye": "4 years, 6 months and 16 days",
+  "Matias Muchnick": "8 years, 3 months and 28 days",
+  "Matías Sepúlveda": "27 days",
+  "Matthew Sujanto": "2 years, 9 months and 29 days",
+  "Mauricio Andrés Cabrera": "3 years, 10 months and 29 days",
+  "Mauricio Cifuentes": "4 months and 6 days",
+  "Mauricio Esteban Rios": "2 years, 7 months and 11 days",
+  "Mauricio Muñoz": "4 months and 28 days",
+  "Mauricio Sandoval": "1 year, 8 months and 7 days",
+  "Maximiliano Silva": "5 years, 4 months and 22 days",
+  "Max Venegas": "4 years, 1 month and 8 days",
+  "Melissa Fernanda Morano": "11 months and 19 days",
+  "Meri Jebirashvili": "5 years, 4 months and 13 days",
+  "Micaela Ludin": "4 years, 1 month and 29 days",
+  "Micaela Vanina Pirri Catini": "1 month and 6 days",
+  "Michael Jerez": "7 years and 28 days",
+  "Michelle Villarroel": "5 years and 8 months",
+  "Miguel Ángel Ferrand": "2 months and 1 day",
+  "Misael Zalazar": "4 years, 2 months and 5 days",
+  "Monserrat Fraustro": "2 years, 2 months and 21 days",
+  "Monserrat Uribarren": "2 years, 6 months and 28 days",
+  "Natalia Luján Juncua": "4 years, 1 month and 8 days",
+  "Natalia Rizzo": "4 years, 9 months and 1 day",
+  "Natalia Sandonato": "4 years, 11 months and 9 days",
+  "Natalia Vera": "4 years, 3 months and 2 days",
+  "Nebil Kawas": "6 years, 4 months and 2 days",
+  "Nicolas Abarca": "2 months and 25 days",
+  "Nicolas Andres Lemus": "3 years, 2 months and 8 days",
+  "Nicolás Hurtado": "3 months and 28 days",
+  "Nicolas Lopez Oyarzun": "8 months and 18 days",
+  "Nicolas Pereira Meeder": "6 months and 28 days",
+  "Nicolas Rasguido": "3 years, 8 months and 11 days",
+  "Nicolas Tapia": "1 year, 11 months and 28 days",
+  "Nicolas Undurraga": "1 year, 8 months and 28 days",
+  "Nicole Alejandra Ferrada": "4 years, 6 months and 14 days",
+  "Nicole Ortiz": "6 years, 5 months and 4 days",
+  "Nicole Rios Torriani": "4 years, 3 months and 28 days",
+  "Nicole Telting": "2 years, 5 months and 27 days",
+  "Olivia Lanari": "1 year, 6 months and 6 days",
+  "Oriel Andrés Muñoz Díaz": "2 years, 3 months and 16 days",
+  "Oscar Leonardo Rodriguez": "3 years, 7 months and 24 days",
+  "Pablo Kronmuller": "3 years and 16 days",
+  "Pablo Molina": "4 years, 2 months and 26 days",
+  "Pablo Veloz": "8 months and 22 days",
+  "Paloma Barthou": "2 years, 4 months and 26 days",
+  "Paolo Beltran": "3 years, 4 months and 25 days",
+  "Pascal Strongman": "10 months and 6 days",
+  "Patricio Caripan Gutierrez": "1 year, 3 months and 29 days",
+  "Patricio Javier Orellana": "6 years, 7 months and 17 days",
+  "Patrick Poon": "3 years, 11 months and 29 days",
+  "Paula Bianchetti": "2 years, 5 months and 17 days",
+  "Paula Misiac": "3 years, 10 months and 20 days",
+  "Paula Pesse": "7 years, 9 months and 25 days",
+  "Paula Piriz": "1 year, 10 months and 2 days",
+  "Paulina Schafer": "2 months and 24 days",
+  "Paulo Orta": "1 year, 8 months and 21 days",
+  "Paz Basualto Diaz": "6 months and 10 days",
+  "Pedro Mafei": "8 months and 22 days",
+  "Phoebe Wang": "13 days",
+  "Pía Llanos": "2 years, 7 months and 26 days",
+  "Prasanna Vasudevan": "4 years, 7 months and 29 days",
+  "Priyadarshini Vijjigiri": "6 months",
+  "Rafaela Alves": "3 months and 28 days",
+  "Renzo Gini": "2 years, 8 months and 22 days",
+  "Ricardo Antonio Montecinos": "1 year, 5 months and 3 days",
+  "Robert Hallinan": "2 years, 6 months and 28 days",
+  "Robert Leonardo Ramirez": "4 years, 3 months and 9 days",
+  "Roberto Alexis Flores Sealls": "4 years, 11 months and 24 days",
+  "Roberto Carlos López López": "2 years and 15 days",
+  "Rocio Inés Miño": "2 years, 2 months and 12 days",
+  "Rodolfo Eduardo Palma": "3 years, 7 months and 20 days",
+  "Rodrigo Contreras": "7 years, 4 months and 17 days",
+  "Rodrigo Vasconcellos": "1 year, 1 month and 26 days",
+  "Romina Bakulic Pedemonte": "1 year, 4 months and 22 days",
+  "Romina Falcon": "1 year, 4 months and 29 days",
+  "Romina Montealegre": "5 years and 6 months",
+  "Rommy Eskenazi": "1 year, 11 months and 10 days",
+  "Rufino Loredo": "11 months and 15 days",
+  "Santiago De Los Reyes": "1 year, 3 months and 2 days",
+  "Santiago Gallo": "1 year, 11 months and 19 days",
+  "Sebastian Donoso": "11 months and 15 days",
+  "Sebastián Flores Castillo": "4 months and 26 days",
+  "Sebastian Martinez": "1 year, 5 months and 25 days",
+  "Sebastian Mugrabi": "4 years, 10 months and 12 days",
+  "Sebastian Prunesti": "3 years, 11 months and 11 days",
+  "Sebastián Román Becerra": "4 years, 2 months and 26 days",
+  "Serena Cristofaro": "1 year, 11 months and 7 days",
+  "Sergio Alan Vera Romo": "2 years, 8 months and 12 days",
+  "Sergio Rodriguez": "6 years, 7 months and 22 days",
+  "Sharon López Cañas": "2 months and 28 days",
+  "Sofia Carolina Ruiz": "4 months and 16 days",
+  "Sofia Contreras": "1 year, 8 months and 27 days",
+  "Sofia Estrugo": "1 year, 9 months and 23 days",
+  "Sofia Michelle Chung": "1 year, 9 months and 19 days",
+  "Sofia Ruiz Lenz": "2 years, 8 months and 5 days",
+  "Sofia Yasky": "5 years, 2 months and 4 days",
+  "Solange Manosalva": "3 years, 9 months and 9 days",
+  "Soledad Francisca Cabañas": "7 years and 17 days",
+  "Tatiana Eloisa Antigual": "3 years and 23 days",
+  "Tatiana Fernanda Neira": "3 years and 28 days",
+  "Thiago Cunegundes Costa Barbosa": "6 years, 9 months and 12 days",
+  "Tina Bui": "3 years, 11 months and 9 days",
+  "Tomas Bellucci": "3 years, 8 months and 15 days",
+  "Tomás Cornejo": "2 years, 1 month and 28 days",
+  "Tomas Figueroa": "3 months",
+  "Tomas Orellana Riveros": "1 year, 3 months and 21 days",
+  "Tomás Rivera": "2 years and 9 months",
+  "Tomás Simón Hermosilla": "2 years, 1 month and 21 days",
+  "Tomas Wolberg": "1 year, 4 months and 6 days",
+  "Trinidad Franco": "6 years, 9 months and 5 days",
+  "Ulises Perucho Zempoalteca": "3 years, 7 months and 27 days",
+  "Valentina De Gregorio": "5 months and 2 days",
+  "Valentina Fischman": "1 year and 19 days",
+  "Valentina Isabel Fernandez": "2 years and 9 days",
+  "Valentina Vergara": "1 year, 8 months and 29 days",
+  "Valeria Herrera": "5 months and 28 days",
+  "Vania Lucía Utreras Cortés": "3 years, 7 months and 27 days",
+  "Vicente Alberto Oyanedel": "2 years, 7 months and 8 days",
+  "Vicente Manriquez": "7 months and 25 days",
+  "Vicente Miguel": "7 months and 25 days",
+  "Victor Arias": "7 years and 25 days",
+  "Víctor Enrique Diaz": "3 years, 11 months and 4 days",
+  "Victoria Gomez": "1 year, 7 months and 28 days",
+  "Victoria Lorente": "3 years, 6 months and 11 days",
+  "Victor Muñoz": "4 years, 1 month and 15 days",
+  "Vitória Luísa Gehrke": "7 months and 18 days",
+  "Wilson Mariano dos Santos": "4 years, 8 months and 10 days",
+  "Yanina Otero": "3 years, 9 months and 23 days",
+  "Yvan Tijoux": "5 years and 14 days",
+  "Zahra Taghva": "20 days",
+};
 
 function renderCard(p,cellKey){
   const m=CM[cellKey],isKT=(p.talent||"").toLowerCase().includes("key talent");
   const potDisp=p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"—";
   const scores=[p.pot_score_1,p.pot_score_2,p.pot_score_3,p.pot_score_4,p.pot_score_5,p.pot_score_6,p.pot_score_7,p.pot_score_8];
   const hasPot=scores.some(s=>s!=null);
+  const tenure=TENURE_MAP[p.nombre]||"—";
+  const potColor=p.pot_avg>=2.5?"#4ade80":p.pot_avg>=1.5?"#93c5fd":"#fca5a5";
+  const potColorDark=p.pot_avg>=2.5?"#15803d":p.pot_avg>=1.5?"#1d4ed8":"#dc2626";
   const retOpts=["","Bajo","Medio","Alto"].map(v=>`<option value="${v}"${p.retentionRisk===v?" selected":""}>${v||"Seleccionar"}</option>`).join("");
   const devOpts=["","Watch & Grow","Support Movement","Ready Now"].map(v=>`<option value="${v}"${p.devDesig===v?" selected":""}>${v||"Seleccionar"}</option>`).join("");
+  const perfColor=p.desempeno==="Role Model"?"#dcfce7":p.desempeno==="Desalineado"?"#fee2e2":"#dbeafe";
+  const perfTColor=p.desempeno==="Role Model"?"#15803d":p.desempeno==="Desalineado"?"#dc2626":"#1d4ed8";
+
+  // Position options
+  const posOpts=`<option value="">Seleccionar posición...</option>`+POSITIONS.map(pos=>`<option value="${pos.replace(/"/g,'&quot;')}">${pos}</option>`).join("");
+
+  // Parse existing pipeline values
+  const pNow=p.pipelineNow||""; const pNowOther=p.pipelineNowOther||"";
+  const pOne=p.pipelineOne||""; const pOneOther=p.pipelineOneOther||"";
+  const pTwo=p.pipelineTwo||""; const pTwoOther=p.pipelineTwoOther||"";
+  const pBNow=p.pipelineBNow||""; const pBNowOther=p.pipelineBNowOther||"";
+  const pBOne=p.pipelineBOne||""; const pBOneOther=p.pipelineBOneOther||"";
+  const pBTwo=p.pipelineBTwo||""; const pBTwoOther=p.pipelineBTwoOther||"";
+
   document.getElementById("cardEmpty").style.display="none";
   const card=document.getElementById("careerCard");card.classList.add("show");
   card.innerHTML=`
-    <div class="card-top">
-      <div style="display:flex;gap:11px;align-items:center">
-        <div class="card-avatar" style="background:${gc(p.nombre)};${isKT?"border:3px solid #f59e0b":""}">${ini(p.nombre)}</div>
-        <div>
-          <div class="card-name">${p.nombre}</div>
-          <div class="card-role">${p.cargo||"—"} · ${p.area||"—"}</div>
-          <div class="card-badges">
-            <span class="badge" style="background:${m.bg};color:${m.ac};border:1px solid ${m.ac}44">${m.l}</span>
-            <span class="badge" style="background:${p.desempeno==="Role Model"?"#dcfce7":p.desempeno==="Desalineado"?"#fee2e2":"#dbeafe"};color:${p.desempeno==="Role Model"?"#15803d":p.desempeno==="Desalineado"?"#dc2626":"#1d4ed8"}">${p.desempeno||"—"}</span>
-            ${isKT?'<span class="badge" style="background:#fef9c3;color:#92400e;border:1px solid #fcd34d">⭐ Key Talent</span>':""}
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="card-header-top">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div class="card-avatar-lg" style="background:${gc(p.nombre)};${isKT?"border:3px solid #f59e0b":""}">${ini(p.nombre)}</div>
+          <div>
+            <div class="card-hname">${p.nombre}</div>
+            <div class="card-hrole">${p.cargo||"—"} · ${p.area||"—"}</div>
+            <div class="card-hbadges">
+              <span class="card-hbadge" style="background:${m.bg};color:${m.ac}">${m.l}</span>
+              <span class="card-hbadge" style="background:${perfColor};color:${perfTColor}">${p.desempeno||"—"}</span>
+              ${isKT?'<span class="card-hbadge" style="background:#fef9c3;color:#92400e">⭐ Key Talent</span>':""}
+            </div>
+          </div>
+        </div>
+        <div class="card-pot-badge">
+          <div class="pot-lbl">Potencial total</div>
+          <div class="pot-num" style="color:${potColor}">${potDisp}</div>
+          <div class="pot-cls" style="color:${potColor}">${p.pot_class||"Sin datos"}</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        <div class="card-meta-item"><label>Seniority</label><span>${p.seniority||"—"}</span></div>
+        <div class="card-meta-item"><label>Manager</label><span>${p.manager||"—"}</span></div>
+        <div class="card-meta-item"><label>Antigüedad</label><span>${tenure}</span></div>
+        <div class="card-meta-item"><label>Área</label><span>${p.area||"—"}</span></div>
+      </div>
+    </div>
+
+    <!-- PLANES DE CARRERA -->
+    <div class="plans-row">
+      <div class="plan-card plan-a">
+        <div class="plan-hdr">
+          <div class="sdot" style="background:#3b82f6"></div>
+          <h3 style="color:#1d4ed8">Plan A · Línea actual</h3>
+        </div>
+        <div class="plan-body">
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#1d4ed8;color:#fff">1</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">Ready Now</div>
+              <select class="plan-step-select" id="pipe_now" onchange="checkOther('pipe_now','pipe_now_other')">
+                ${posOpts.replace(`value="${pNow}"`,`value="${pNow}" selected`)}
+              </select>
+              <input class="plan-step-input" id="pipe_now_other" placeholder="Otro rol (opcional)..." value="${pNowOther}" style="margin-top:4px;${pNowOther?'display:block':'display:none'}">
+            </div>
+          </div>
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#3b82f6;color:#fff">2</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">A un movimiento</div>
+              <select class="plan-step-select" id="pipe_one" onchange="checkOther('pipe_one','pipe_one_other')">
+                ${posOpts.replace(`value="${pOne}"`,`value="${pOne}" selected`)}
+              </select>
+              <input class="plan-step-input" id="pipe_one_other" placeholder="Otro rol (opcional)..." value="${pOneOther}" style="margin-top:4px;${pOneOther?'display:block':'display:none'}">
+            </div>
+          </div>
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#93c5fd;color:#1d4ed8">3</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">A dos movimientos</div>
+              <select class="plan-step-select" id="pipe_two" onchange="checkOther('pipe_two','pipe_two_other')">
+                ${posOpts.replace(`value="${pTwo}"`,`value="${pTwo}" selected`)}
+              </select>
+              <input class="plan-step-input" id="pipe_two_other" placeholder="Otro rol (opcional)..." value="${pTwoOther}" style="margin-top:4px;${pTwoOther?'display:block':'display:none'}">
+            </div>
           </div>
         </div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:9px;color:#94a3b8;margin-bottom:1px">Potencial total</div>
-        <div style="font-size:22px;font-weight:700;color:${p.pot_avg>=2.5?"#15803d":p.pot_avg>=1.5?"#1d4ed8":"#94a3b8"}">${potDisp}</div>
-        <div style="font-size:10px;color:#64748b">${p.pot_class||"Sin datos"}</div>
+      <div class="plan-card plan-b">
+        <div class="plan-hdr">
+          <div class="sdot" style="background:#f59e0b"></div>
+          <h3 style="color:#a16207">Plan B · Movimiento alternativo</h3>
+        </div>
+        <div class="plan-body">
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#a16207;color:#fff">1</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">Ready Now</div>
+              <select class="plan-step-select" id="pipe_b_now" onchange="checkOther('pipe_b_now','pipe_b_now_other')">
+                ${posOpts.replace(`value="${pBNow}"`,`value="${pBNow}" selected`)}
+              </select>
+              <input class="plan-step-input" id="pipe_b_now_other" placeholder="Otro rol (opcional)..." value="${pBNowOther}" style="margin-top:4px;${pBNowOther?'display:block':'display:none'}">
+            </div>
+          </div>
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#f59e0b;color:#fff">2</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">A un movimiento</div>
+              <select class="plan-step-select" id="pipe_b_one" onchange="checkOther('pipe_b_one','pipe_b_one_other')">
+                ${posOpts.replace(`value="${pBOne}"`,`value="${pBOne}" selected`)}
+              </select>
+              <input class="plan-step-input" id="pipe_b_one_other" placeholder="Otro rol (opcional)..." value="${pBOneOther}" style="margin-top:4px;${pBOneOther?'display:block':'display:none'}">
+            </div>
+          </div>
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#fde68a;color:#a16207">3</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">A dos movimientos</div>
+              <select class="plan-step-select" id="pipe_b_two" onchange="checkOther('pipe_b_two','pipe_b_two_other')">
+                ${posOpts.replace(`value="${pBTwo}"`,`value="${pBTwo}" selected`)}
+              </select>
+              <input class="plan-step-input" id="pipe_b_two_other" placeholder="Otro rol (opcional)..." value="${pBTwoOther}" style="margin-top:4px;${pBTwoOther?'display:block':'display:none'}">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="section">
-      <div class="section-hdr"><div class="sdot" style="background:#3b82f6"></div><h3>Datos del Partner</h3></div>
-      <div class="section-body"><div class="info-grid">
-        <div class="info-item"><label>Seniority</label><span>${p.seniority||"—"}</span></div>
-        <div class="info-item"><label>Área</label><span>${p.area||"—"}</span></div>
-        <div class="info-item"><label>Manager</label><span>${p.manager||"—"}</span></div>
-        <div class="info-item"><label>Desempeño</label><span>${p.desempeno||"—"}</span></div>
-      </div></div>
-    </div>
-    <div class="section">
-      <div class="section-hdr"><div class="sdot" style="background:#6d28d9"></div><h3>Pipeline de Carrera</h3></div>
-      <div class="section-body"><div class="pipe-row">
-        <div class="pipe-item pipe-now"><label>Ready Now</label><textarea id="pipe_now" placeholder="Rol disponible hoy...">${p.pipelineNow}</textarea></div>
-        <div class="pipe-item pipe-one"><label>A un movimiento</label><textarea id="pipe_one" placeholder="Próximo rol...">${p.pipelineOne}</textarea></div>
-        <div class="pipe-item pipe-two"><label>A dos movimientos</label><textarea id="pipe_two" placeholder="Proyección largo plazo...">${p.pipelineTwo}</textarea></div>
-      </div></div>
-    </div>
-    ${hasPot?`<div class="section">
-      <div class="section-hdr"><div class="sdot" style="background:#f59e0b"></div><h3>Evaluación de Potencial</h3></div>
-      <div class="section-body"><div class="comp-grid">
-        ${BEH_LABELS.map((lbl,i)=>{const s=scores[i],pct=s!=null?(s/3)*100:0;return`<div class="comp-item"><label>${lbl}</label><div class="comp-score"><div class="comp-bar"><div class="comp-fill" style="width:${pct}%;background:${BEH_COLORS[i]}"></div></div><span class="comp-val" style="color:${s===3?"#15803d":s===2?"#1d4ed8":s===1?"#dc2626":"#94a3b8"}">${s!=null?s:"—"}</span></div></div>`;}).join("")}
-      </div></div>
+
+    <!-- RADAR + COMPORTAMIENTOS -->
+    ${hasPot?`
+    <div class="radar-section">
+      <div class="section-hdr"><div class="sdot" style="background:#f59e0b"></div><h3>Mapa de Potencial</h3></div>
+      <div class="radar-body">
+        <div class="radar-canvas-wrap">
+          <canvas id="radarChart" width="190" height="190"></canvas>
+        </div>
+        <div class="beh-detail-list">
+          ${[
+            {lbl:"Iniciativa y liderazgo",i:0,c:"#3b82f6"},
+            {lbl:"Desarrollo de equipos",i:1,c:"#3b82f6"},
+            {lbl:"Orientación al feedback",i:2,c:"#8b5cf6"},
+            {lbl:"Aprendizaje continuo",i:3,c:"#8b5cf6"},
+            {lbl:"Pensamiento sistémico",i:4,c:"#f59e0b"},
+            {lbl:"Tolerancia a la ambigüedad",i:5,c:"#f59e0b"},
+            {lbl:"Capacidad de escucha",i:6,c:"#10b981"},
+            {lbl:"Habilidad comunicacional",i:7,c:"#10b981"},
+          ].map(b=>{
+            const s=scores[b.i];
+            const pct=s!=null?(s/3)*100:0;
+            return \`<div class="beh-detail-item">
+              <div class="beh-detail-dot" style="background:\${b.c}"></div>
+              <span class="beh-detail-name">\${b.lbl}</span>
+              <div class="beh-detail-bar"><div class="beh-detail-fill" style="width:\${pct}%;background:\${b.c}"></div></div>
+              <span class="beh-detail-score" style="color:\${s===3?"#15803d":s===2?"#1d4ed8":s===1?"#dc2626":"#94a3b8"}">\${s!=null?s:"—"}</span>
+            </div>\`;
+          }).join("")}
+        </div>
+      </div>
     </div>`:""}
+
+    <!-- DESARROLLO -->
     <div class="section">
       <div class="section-hdr"><div class="sdot" style="background:#10b981"></div><h3>Plan de Desarrollo</h3></div>
       <div class="section-body two-col">
-        <div><div class="field-lbl">Necesidades</div><textarea id="dev_needs" placeholder="Áreas de mejora...">${p.devNeeds}</textarea></div>
-        <div><div class="field-lbl">Acciones</div><textarea id="dev_actions" placeholder="Acciones del período...">${p.devActions}</textarea></div>
+        <div><div class="field-lbl">Necesidades de desarrollo</div><textarea id="dev_needs" placeholder="Áreas de mejora identificadas...">${p.devNeeds}</textarea></div>
+        <div><div class="field-lbl">Acciones concretas</div><textarea id="dev_actions" placeholder="Acciones del período...">${p.devActions}</textarea></div>
         <div><div class="field-lbl">Fortalezas clave</div><textarea id="key_strengths" placeholder="Principales fortalezas...">${p.keyStrengths}</textarea></div>
         <div><div class="field-lbl">Aspiraciones</div><textarea id="aspirations" placeholder="¿Qué quiere lograr?">${p.aspirations}</textarea></div>
       </div>
     </div>
+
+    <!-- GESTIÓN -->
     <div class="section">
       <div class="section-hdr"><div class="sdot" style="background:#ec4899"></div><h3>Gestión del Talento</h3></div>
       <div class="section-body two-col">
@@ -850,13 +1450,102 @@ function renderCard(p,cellKey){
   `;
 }
 
+function checkOther(selectId, inputId){
+  const sel=document.getElementById(selectId);
+  const inp=document.getElementById(inputId);
+  if(!sel||!inp) return;
+  inp.style.display = sel.value ? "block" : "none";
+}
+
+function drawRadar(scores){
+  const canvas=document.getElementById("radarChart");
+  if(!canvas) return;
+  const ctx=canvas.getContext("2d");
+  const W=190,H=190,cx=W/2,cy=H/2,R=72;
+  ctx.clearRect(0,0,W,H);
+  const labels=["Iniciativa","Des. Equipos","Feedback","Aprendizaje","P. Sistémico","Ambigüedad","Escucha","Comunic."];
+  const colors=["#3b82f6","#3b82f6","#8b5cf6","#8b5cf6","#f59e0b","#f59e0b","#10b981","#10b981"];
+  const n=8;
+  const angle=(i)=>(-Math.PI/2)+(2*Math.PI/n)*i;
+
+  // Grid circles
+  [1,2,3].forEach(level=>{
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      const r=R*(level/3);
+      const x=cx+r*Math.cos(angle(i));
+      const y=cy+r*Math.sin(angle(i));
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle=level===3?"#e2e8f0":"#f1f5f9";
+    ctx.lineWidth=1;
+    ctx.stroke();
+  });
+
+  // Axes
+  for(let i=0;i<n;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+R*Math.cos(angle(i)),cy+R*Math.sin(angle(i)));
+    ctx.strokeStyle="#f1f5f9";ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // Data polygon
+  const vals=scores.map(s=>s!=null?s:0);
+  ctx.beginPath();
+  vals.forEach((v,i)=>{
+    const r=R*(v/3);
+    const x=cx+r*Math.cos(angle(i));
+    const y=cy+r*Math.sin(angle(i));
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.closePath();
+  ctx.fillStyle="rgba(111,207,95,0.15)";ctx.fill();
+  ctx.strokeStyle="#6fcf5f";ctx.lineWidth=2;ctx.stroke();
+
+  // Dots
+  vals.forEach((v,i)=>{
+    if(v===0) return;
+    const r=R*(v/3);
+    const x=cx+r*Math.cos(angle(i));
+    const y=cy+r*Math.sin(angle(i));
+    ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);
+    ctx.fillStyle=colors[i];ctx.fill();
+    ctx.strokeStyle="#fff";ctx.lineWidth=1.5;ctx.stroke();
+  });
+
+  // Labels
+  ctx.font="bold 8px 'Segoe UI',sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  labels.forEach((lbl,i)=>{
+    const r=R+14;
+    const x=cx+r*Math.cos(angle(i));
+    const y=cy+r*Math.sin(angle(i));
+    ctx.fillStyle="#94a3b8";
+    ctx.fillText(lbl,x,y);
+  });
+}
+
 async function saveCard(name){
   const btn=document.getElementById("saveCardBtn");if(btn)btn.disabled=true;
   setSyncPill("saving");
   const g=id=>document.getElementById(id)?.value||"";
   try{
-    await sbUpsert("fichas_carrera",{nombre:name,pipeline_now:g("pipe_now"),pipeline_one:g("pipe_one"),pipeline_two:g("pipe_two"),dev_needs:g("dev_needs"),dev_actions:g("dev_actions"),key_strengths:g("key_strengths"),aspirations:g("aspirations"),personal_notes:g("personal_notes"),retention_risk:g("retention_risk"),dev_designation:g("dev_designation"),updated_at:new Date().toISOString()});
-    FICHAS[name.toLowerCase()]={nombre:name,pipeline_now:g("pipe_now"),pipeline_one:g("pipe_one"),pipeline_two:g("pipe_two"),dev_needs:g("dev_needs"),dev_actions:g("dev_actions"),key_strengths:g("key_strengths"),aspirations:g("aspirations"),personal_notes:g("personal_notes"),retention_risk:g("retention_risk"),dev_designation:g("dev_designation"),updated_at:new Date().toISOString()};
+    const data={
+      nombre:name,
+      pipeline_now:g("pipe_now"), pipeline_now_other:g("pipe_now_other"),
+      pipeline_one:g("pipe_one"), pipeline_one_other:g("pipe_one_other"),
+      pipeline_two:g("pipe_two"), pipeline_two_other:g("pipe_two_other"),
+      pipeline_b_now:g("pipe_b_now"), pipeline_b_now_other:g("pipe_b_now_other"),
+      pipeline_b_one:g("pipe_b_one"), pipeline_b_one_other:g("pipe_b_one_other"),
+      pipeline_b_two:g("pipe_b_two"), pipeline_b_two_other:g("pipe_b_two_other"),
+      dev_needs:g("dev_needs"), dev_actions:g("dev_actions"),
+      key_strengths:g("key_strengths"), aspirations:g("aspirations"),
+      personal_notes:g("personal_notes"), retention_risk:g("retention_risk"),
+      dev_designation:g("dev_designation"), updated_at:new Date().toISOString()
+    };
+    await sbUpsert("fichas_carrera",data);
+    FICHAS[name.toLowerCase()]={...data};
     renderFichasTable();setSyncPill("ok");
   }catch(e){setSyncPill("err");}
   if(btn)btn.disabled=false;
