@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talent Pipeline · NotCo Cono Sur 2025</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#1a1a1a;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.logo{font-size:12px;font-weight:700;color:#6fcf5f;letter-spacing:.14em;text-transform:uppercase}
+.topbar h1{font-size:15px;font-weight:600;color:#fff}
+.topbar-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sync-pill{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:600;transition:all .3s}
+.pill-ok{background:#14532d;color:#4ade80}
+.pill-saving{background:#713f12;color:#fde68a}
+.pill-err{background:#7f1d1d;color:#fca5a5}
+.pill-idle{background:#1e293b;color:#475569}
+button,select{font-family:inherit;cursor:pointer;outline:none}
+.btn{font-size:11px;padding:6px 12px;display:inline-flex;align-items:center;gap:5px;border-radius:7px;border:1px solid;transition:all .15s;font-weight:500}
+.btn-ghost{background:transparent;border-color:#333;color:#94a3b8}
+.btn-ghost:hover{background:#222;color:#fff}
+.btn-primary{background:#1a1a1a;color:#6fcf5f;border-color:#333}
+.btn-primary:hover{background:#111;border-color:#6fcf5f}
+.nav-tabs{display:flex;gap:2px;padding:0 20px;background:#fff;border-bottom:1px solid #e2e8f0}
+.nav-tab{font-size:12px;font-weight:600;padding:10px 16px;border:none;background:none;cursor:pointer;color:#64748b;border-bottom:2px solid transparent;transition:all .15s}
+.nav-tab.active{color:#0f172a;border-bottom-color:#1a1a1a}
+.view{display:none;flex:1}
+.view.active{display:flex}
+/* Nine-box */
+.nb-layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 91px)}
+.nb-left{width:450px;flex-shrink:0;padding:16px;overflow-y:auto;border-right:1px solid #e2e8f0;background:#fff}
+.nb-right{flex:1;padding:18px;overflow-y:auto;background:#f8fafc}
+.area-filter{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.area-filter label{font-size:11px;color:#64748b;flex-shrink:0}
+.area-filter select{font-size:11px;padding:5px 10px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#1e293b;flex:1}
+.grid-header h2{font-size:14px;font-weight:700;color:#0f172a}
+.grid-header p{font-size:11px;color:#64748b;margin-top:2px;margin-bottom:10px}
+.legend{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#64748b}
+.leg-dot{width:10px;height:10px;border-radius:50%;background:#6366f1;flex-shrink:0}
+.grid-wrap{display:flex;gap:5px}
+.y-axis{display:flex;align-items:center;justify-content:center;width:18px;flex-shrink:0}
+.y-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;transform:rotate(-90deg);white-space:nowrap}
+.grid-inner{flex:1}
+.grid-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:5px}
+.cell{border-radius:8px;padding:8px;min-height:88px;display:flex;flex-direction:column;gap:4px;border:1.5px solid transparent}
+.cell-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.dots{display:flex;flex-wrap:wrap;gap:3px;flex:1}
+.dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,.25);transition:transform .12s;flex-shrink:0;color:#fff;user-select:none}
+.dot:hover{transform:scale(1.28);z-index:5;position:relative}
+.dot.active{transform:scale(1.18);box-shadow:0 0 0 2.5px #1a1a1a,0 0 0 4.5px #6fcf5f;z-index:10;position:relative}
+.dot.kt{border:2px solid #f59e0b}
+.dot.evaluated{box-shadow:0 0 0 2px #6fcf5f}
+.cell-count{font-size:9px;color:#94a3b8;margin-top:auto}
+.x-labels{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:4px}
+.x-lbl{text-align:center;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8}
+.x-title{text-align:center;font-size:8.5px;font-weight:700;text-transform:uppercase;color:#94a3b8;margin-top:3px}
+.stats{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.stat{background:#f8fafc;border-radius:7px;padding:8px 10px;flex:1 1 85px;border-left:2px solid}
+.stat-n{font-size:18px;font-weight:700;line-height:1}
+.stat-l{font-size:9px;color:#64748b;margin-top:2px}
+/* Career card */
+.card-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;padding:40px;color:#94a3b8}
+.card-empty svg{margin-bottom:14px;opacity:.35}
+.card-empty h3{font-size:14px;font-weight:600;color:#64748b;margin-bottom:5px}
+.card-empty p{font-size:11px;line-height:1.7}
+.career-card{display:none}
+.career-card.show{display:block}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.card-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.card-name{font-size:17px;font-weight:700;color:#0f172a}
+.card-role{font-size:11px;color:#64748b;margin-top:1px}
+.card-badges{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.badge{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}
+.section{background:#fff;border-radius:9px;border:1px solid #e2e8f0;margin-bottom:9px;overflow:hidden}
+.section-hdr{padding:8px 13px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:7px}
+.section-hdr h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0f172a}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.section-body{padding:11px 13px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.info-item label{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:2px}
+.info-item span{font-size:11px;color:#1e293b;font-weight:500}
+.pipe-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.pipe-item{border-radius:7px;padding:8px;border:1px solid #e2e8f0;background:#f8fafc}
+.pipe-item label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.pipe-now{border-color:#86efac;background:#f0fdf4}.pipe-now label{color:#166534}
+.pipe-one{border-color:#93c5fd;background:#eff6ff}.pipe-one label{color:#1d4ed8}
+.pipe-two{border-color:#c4b5fd;background:#f5f3ff}.pipe-two label{color:#6d28d9}
+textarea{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:7px 9px;font-family:inherit;font-size:11px;color:#1e293b;resize:vertical;min-height:60px;background:#fff;transition:border-color .15s}
+textarea:focus{outline:none;border-color:#6fcf5f;box-shadow:0 0 0 2px rgba(111,207,95,.12)}
+select.sf{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:6px 9px;font-family:inherit;font-size:11px;color:#1e293b;background:#fff}
+select.sf:focus{outline:none;border-color:#6fcf5f}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.field-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.comp-item{border-radius:6px;padding:7px 9px;border:1px solid #e2e8f0}
+.comp-item label{font-size:9px;font-weight:600;color:#64748b;display:block;margin-bottom:3px}
+.comp-score{display:flex;align-items:center;gap:6px}
+.comp-bar{flex:1;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.comp-fill{height:100%;border-radius:3px}
+.comp-val{font-size:11px;font-weight:700;min-width:24px;text-align:right}
+.save-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:12px}
+.save-note{font-size:10px;color:#94a3b8;margin-top:5px;text-align:right}
+/* Checklist */
+.checklist-wrap{display:flex;flex-direction:column;gap:6px}
+.check-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;transition:all .15s}
+.check-item.done{background:#f0fdf4;border-color:#86efac}
+.check-item.inprogress{background:#eff6ff;border-color:#93c5fd}
+.check-status{width:22px;height:22px;border-radius:50%;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:10px;transition:all .15s}
+.check-status.done{background:#15803d;border-color:#15803d;color:#fff}
+.check-status.inprogress{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.check-desc{flex:1;font-size:11px;color:#1e293b;border:none;outline:none;background:transparent;font-family:inherit}
+.check-desc.done{text-decoration:line-through;color:#94a3b8}
+.check-date{font-size:10px;color:#94a3b8;border:1px solid #e2e8f0;border-radius:5px;padding:3px 6px;background:#f8fafc;font-family:inherit;cursor:pointer}
+.check-date:focus{outline:none;border-color:#6fcf5f}
+.check-del{width:20px;height:20px;border-radius:50%;background:none;border:none;color:#cbd5e1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;padding:0}
+.check-del:hover{color:#dc2626;background:#fee2e2}
+.add-check-btn{display:flex;align-items:center;gap:6px;font-size:11px;color:#6fcf5f;background:none;border:1px dashed #6fcf5f;border-radius:7px;padding:6px 12px;cursor:pointer;font-family:inherit;transition:all .15s;width:100%}
+.add-check-btn:hover{background:#f0fdf4}
+/* New card design */
+.card-header{background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);border-radius:12px;padding:18px;margin-bottom:10px;color:#fff}
+.card-header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.card-avatar-lg{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.card-hname{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.card-hrole{font-size:11px;color:#94a3b8;margin-top:2px}
+.card-hbadges{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.card-hbadge{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}
+.card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
+.card-meta-item label{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin-bottom:2px}
+.card-meta-item span{font-size:11px;color:#e5e7eb;font-weight:500}
+.card-pot-badge{text-align:right}
+.card-pot-badge .pot-num{font-size:28px;font-weight:700;line-height:1}
+.card-pot-badge .pot-lbl{font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:.06em}
+.card-pot-badge .pot-cls{font-size:11px;font-weight:600;margin-top:2px}
+/* Plans */
+.plans-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.plan-card{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden}
+.plan-card.plan-a{border-color:#3b82f644}
+.plan-card.plan-b{border-color:#f59e0b44}
+.plan-hdr{padding:10px 13px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px}
+.plan-hdr h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.plan-body{padding:12px 13px;display:flex;flex-direction:column;gap:8px}
+.plan-step{display:flex;align-items:flex-start;gap:8px}
+.plan-step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.plan-step-content{flex:1}
+.plan-step-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}
+.plan-step-select{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;font-family:inherit;font-size:11px;color:#1e293b;background:#fff}
+.plan-step-select:focus{outline:none;border-color:#6fcf5f}
+.plan-step-input{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;font-family:inherit;font-size:11px;color:#94a3b8;background:#fff;font-style:italic}
+.plan-step-input:focus{outline:none;border-color:#6fcf5f;color:#1e293b;font-style:normal}
+/* Radar */
+.radar-section{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:10px;overflow:hidden}
+.radar-body{padding:12px 13px;display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start}
+.radar-canvas-wrap{display:flex;align-items:center;justify-content:center}
+.beh-detail-list{display:flex;flex-direction:column;gap:5px}
+.beh-detail-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:#f8fafc}
+.beh-detail-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.beh-detail-name{font-size:11px;color:#475569;flex:1}
+.beh-detail-score{font-size:12px;font-weight:700;min-width:20px;text-align:right}
+.beh-detail-bar{flex:1;height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden;max-width:80px}
+.beh-detail-fill{height:100%;border-radius:2px}
+/* Admin */
+.admin-layout{flex:1;padding:20px;overflow-y:auto}
+.admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.admin-header h2{font-size:16px;font-weight:700;color:#0f172a}
+.admin-header p{font-size:12px;color:#64748b;margin-top:2px}
+.admin-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.admin-filters input,.admin-filters select{font-size:12px;padding:7px 11px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#1e293b}
+.admin-filters input{width:220px}
+.table-wrap{background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f8fafc;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;border-bottom:1px solid #e2e8f0}
+td{padding:8px 12px;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.pb{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;display:inline-block}
+.pb-rm{background:#dcfce7;color:#15803d}.pb-al{background:#dbeafe;color:#1d4ed8}
+.pb-des{background:#fee2e2;color:#dc2626}.pb-ne{background:#f1f5f9;color:#64748b}
+.kt-sm{background:#fef9c3;color:#92400e;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:700;display:inline-block}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:22px;width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);border:1px solid #e2e8f0}
+.modal h3{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:16px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.mf label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}
+.mf input,.mf select{width:100%;border:1px solid #e2e8f0;border-radius:7px;padding:7px 10px;font-family:inherit;font-size:12px;color:#1e293b;background:#fff}
+.mf input:focus,.mf select:focus{outline:none;border-color:#6fcf5f}
+.mf.full{grid-column:1/-1}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+/* Potencial eval */
+.pot-layout{flex:1;padding:20px;overflow-y:auto}
+.pot-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.pot-header h2{font-size:16px;font-weight:700;color:#0f172a}
+.pot-header p{font-size:12px;color:#64748b;margin-top:2px}
+.pot-selector{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pot-selector label{font-size:12px;font-weight:600;color:#475569;flex-shrink:0}
+.pot-selector select{font-size:13px;padding:8px 12px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#1e293b;min-width:280px;font-family:inherit}
+.pot-person-info{display:flex;gap:10px;align-items:center;margin-left:auto}
+.pot-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.pot-person-name{font-size:13px;font-weight:600;color:#0f172a}
+.pot-person-sub{font-size:11px;color:#64748b}
+.pot-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.comp-section{background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden}
+.comp-section-hdr{padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f1f5f9}
+.comp-section-hdr h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0f172a}
+.comp-section-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.beh-item{border:1px solid #f1f5f9;border-radius:8px;padding:10px 12px}
+.beh-name{font-size:12px;font-weight:600;color:#1e293b;margin-bottom:2px}
+.beh-desc{font-size:10px;color:#94a3b8;margin-bottom:8px;line-height:1.5}
+.beh-scale{display:flex;gap:6px}
+.scale-btn{flex:1;padding:6px 4px;border:1.5px solid #e2e8f0;border-radius:6px;background:#fff;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;font-family:inherit}
+.scale-btn:hover{border-color:#94a3b8}
+.scale-btn.sel-1{background:#fee2e2;border-color:#dc2626;color:#dc2626}
+.scale-btn.sel-2{background:#dbeafe;border-color:#1d4ed8;color:#1d4ed8}
+.scale-btn.sel-3{background:#dcfce7;border-color:#15803d;color:#15803d}
+.pot-result{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:16px;margin-bottom:16px}
+.pot-result h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0f172a;margin-bottom:12px}
+.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.result-comp{border-radius:8px;padding:10px;text-align:center;border:1px solid #e2e8f0}
+.result-comp label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;display:block;margin-bottom:4px}
+.result-comp .result-val{font-size:22px;font-weight:700;line-height:1}
+.result-total{border-radius:10px;padding:14px;text-align:center;border:2px solid}
+.result-total label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:4px}
+.result-total .result-val{font-size:32px;font-weight:700;line-height:1}
+.result-total .result-class{font-size:13px;font-weight:600;margin-top:4px}
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:50px;color:#94a3b8;font-size:12px;gap:10px}
+.spinner{width:16px;height:16px;border:2px solid #e2e8f0;border-top-color:#6fcf5f;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo">NotCo</span>
+    <h1>Talent Pipeline · Cono Sur 2025</h1>
+  </div>
+  <div class="topbar-right">
+    <span class="sync-pill pill-idle" id="syncPill">Cargando...</span>
+    <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="reloadData()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Actualizar
+    </button>
+  </div>
+</div>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchView('ninebox',this)">Nine-Box Grid</button>
+  <button class="nav-tab" onclick="switchView('admin',this)">Gestión de Partners</button>
+  <button class="nav-tab" onclick="switchView('fichas',this)">Fichas Guardadas</button>
+  <button class="nav-tab" onclick="switchView('potencial',this)">Evaluación de Potencial</button>
+</div>
+
+<div class="view active" id="view-ninebox">
+  <div class="nb-layout">
+    <div class="nb-left">
+      <div class="loading" id="nbLoading"><div class="spinner"></div>Cargando datos...</div>
+      <div id="nbContent" style="display:none">
+        <div class="area-filter">
+          <label>Área:</label>
+          <select id="areaFilter" onchange="renderGrid()"><option>Todas las áreas</option></select>
+        </div>
+        <div class="grid-header"><h2>Nine-Box Grid</h2><p id="gridSubtitle"></p></div>
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#166534;border:2px solid #f59e0b"></div>Key Talent</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#1d4ed8"></div>High Potential</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#6d28d9"></div>Talent</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#475569"></div>Evaluado sin tag</div>
+          <div class="leg-item"><div class="leg-dot"></div>Sin evaluación</div>
+        </div>
+        <div class="grid-wrap">
+          <div class="y-axis"><span class="y-lbl">Potencial ↑</span></div>
+          <div class="grid-inner">
+            <div id="grid"></div>
+            <div class="x-labels">
+              <div class="x-lbl">Desalineado</div>
+              <div class="x-lbl">Alineado</div>
+              <div class="x-lbl">Role Model</div>
+            </div>
+            <div class="x-title">Desempeño →</div>
+          </div>
+        </div>
+        <div class="stats" id="stats"></div>
+      </div>
+    </div>
+    <div class="nb-right">
+      <div class="card-empty" id="cardEmpty">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <h3>Selecciona una persona</h3>
+        <p>Click en cualquier punto del nine-box para<br>ver y editar la ficha de desarrollo de carrera.<br><br>Todo se guarda automáticamente en la nube.</p>
+      </div>
+      <div class="career-card" id="careerCard"></div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-admin">
+  <div class="admin-layout">
+    <div class="admin-header">
+      <div>
+        <h2>Gestión de Partners</h2>
+        <p>Edita datos, agrega personas o actualiza desempeño y potencial directamente desde aquí</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar partner
+      </button>
+    </div>
+    <div class="admin-filters">
+      <input type="text" id="searchInput" placeholder="Buscar por nombre..." oninput="renderTable()">
+      <select id="areaFilter2" onchange="renderTable()"><option>Todas las áreas</option></select>
+      <select id="perfFilter" onchange="renderTable()">
+        <option value="">Todos los desempeños</option>
+        <option>Alineado</option><option>Role Model</option>
+        <option>Desalineado</option><option>No Evaluado</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <div class="loading" id="adminLoading"><div class="spinner"></div>Cargando...</div>
+      <table id="adminTable" style="display:none">
+        <thead><tr>
+          <th>Nombre</th><th>Área</th><th>Cargo</th>
+          <th>Desempeño</th><th>Potencial</th><th>Talent</th><th>Acciones</th>
+        </tr></thead>
+        <tbody id="adminBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-fichas">
+  <div class="admin-layout">
+    <div class="admin-header">
+      <div>
+        <h2>Fichas de Carrera Guardadas</h2>
+        <p>Todas las fichas completadas — podés exportarlas a Excel</p>
+      </div>
+      <button class="btn btn-primary" onclick="exportFichas()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar a Excel
+      </button>
+    </div>
+    <div class="table-wrap">
+      <div class="loading" id="fichasLoading"><div class="spinner"></div>Cargando fichas...</div>
+      <table id="fichasTable" style="display:none">
+        <thead><tr>
+          <th>Nombre</th><th>Área</th><th>Pipeline Ready Now</th>
+          <th>A un movimiento</th><th>Necesidades</th><th>Fortalezas</th>
+          <th>Riesgo Retención</th><th>Designation</th><th>Última actualización</th><th>Acciones</th>
+        </tr></thead>
+        <tbody id="fichasBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-potencial">
+  <div class="pot-layout">
+    <div class="pot-header">
+      <div>
+        <h2>Evaluación de Potencial</h2>
+        <p>Calificá cada comportamiento en escala 1-3 · El sistema calcula los promedios automáticamente</p>
+      </div>
+      <button class="btn btn-primary" id="savePotBtn" onclick="savePotencial()" style="display:none">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar evaluación
+      </button>
+    </div>
+
+    <div class="pot-selector">
+      <label>Área:</label>
+      <select id="potAreaFilter" onchange="buildPotSelect()" style="min-width:180px">
+        <option value="">Todas las áreas</option>
+      </select>
+      <label>Partner:</label>
+      <select id="potPersonSelect" onchange="loadPotPerson()">
+        <option value="">Seleccionar persona...</option>
+      </select>
+      <div class="pot-person-info" id="potPersonInfo" style="display:none">
+        <div class="pot-avatar" id="potAvatar"></div>
+        <div>
+          <div class="pot-person-name" id="potPersonName"></div>
+          <div class="pot-person-sub" id="potPersonSub"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="potForm" style="display:none">
+      <div class="pot-grid" id="potCompGrid"></div>
+      <div class="pot-result">
+        <h3>Resultado</h3>
+        <div class="result-grid">
+          <div class="result-comp" id="res-1"><label>Orientación a Liderar</label><div class="result-val" id="rv-1">—</div></div>
+          <div class="result-comp" id="res-2"><label>Desarrollo Personal</label><div class="result-val" id="rv-2">—</div></div>
+          <div class="result-comp" id="res-3"><label>Manejo Complejidad</label><div class="result-val" id="rv-3">—</div></div>
+          <div class="result-comp" id="res-4"><label>Comunicación</label><div class="result-val" id="rv-4">—</div></div>
+        </div>
+        <div class="result-total" id="resTotal" style="border-color:#e2e8f0">
+          <label>Potencial Total</label>
+          <div class="result-val" id="rvTotal">—</div>
+          <div class="result-class" id="rvClass">Sin datos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Editar partner</h3>
+    <div class="modal-grid" id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL="https://sbfvtyidzqfphngiavlt.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiZnZ0eWlkenFmcGhuZ2lhdmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMjQ4ODUsImV4cCI6MjA4OTcwMDg4NX0.WqERaxrqnw7ubXf593pyyjbbQW9sZt_jZYaV7Na--_k";
+
+async function sbGet(table,filter=""){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${filter}`,{
+    headers:{
+      "apikey":SB_KEY,
+      "Authorization":`Bearer ${SB_KEY}`,
+      "Content-Type":"application/json"
+    }
+  });
+  if(!r.ok){const t=await r.text();throw new Error(t);}
+  return r.json();
+}
+async function sbUpsert(table,data){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}`,{
+    method:"POST",
+    headers:{
+      "apikey":SB_KEY,
+      "Authorization":`Bearer ${SB_KEY}`,
+      "Content-Type":"application/json",
+      "Prefer":"resolution=merge-duplicates,return=representation"
+    },
+    body:JSON.stringify(data)
+  });
+  if(!r.ok){const t=await r.text();throw new Error(t);}
+  return r.json();
+}
+
+function setSyncPill(s){
+  const el=document.getElementById("syncPill");el.className="sync-pill";
+  if(s==="ok"){el.classList.add("pill-ok");el.textContent="✓ Guardado";setTimeout(()=>setSyncPill("idle"),3000);}
+  else if(s==="saving"){el.classList.add("pill-saving");el.textContent="Guardando…";}
+  else if(s==="err"){el.classList.add("pill-err");el.textContent="Error de sync";setTimeout(()=>setSyncPill("idle"),5000);}
+  else{el.classList.add("pill-idle");el.textContent="Listo";}
+}
+
+const PERF={Desalineado:1,Alineado:2,"Role Model":3};
+const CM={"1-3":{l:"Enigma",bg:"#fef9c3",ac:"#a16207"},"2-3":{l:"Future Star",bg:"#dcfce7",ac:"#15803d"},"3-3":{l:"Top Talent",bg:"#166534",ac:"#4ade80",dk:true},"1-2":{l:"Under Performer",bg:"#fee2e2",ac:"#dc2626"},"2-2":{l:"Core Player",bg:"#dbeafe",ac:"#1d4ed8"},"3-2":{l:"High Performer",bg:"#ede9fe",ac:"#6d28d9"},"1-1":{l:"Riesgo",bg:"#fecaca",ac:"#b91c1c"},"2-1":{l:"Sólido",bg:"#f1f5f9",ac:"#475569"},"3-1":{l:"Experto",bg:"#faf5ff",ac:"#7e22ce"}};
+const BEH_LABELS=["Iniciativa","Des. Equipos","Feedback","Aprendizaje","P. Sistémico","Ambigüedad","Escucha","Comunicación"];
+const BEH_COLORS=["#3b82f6","#3b82f6","#8b5cf6","#8b5cf6","#f59e0b","#f59e0b","#10b981","#10b981"];
+const COLORS=["#6366f1","#0ea5e9","#10b981","#f59e0b","#ec4899","#14b8a6","#8b5cf6","#f97316"];
+const gc=n=>{let h=0;for(let i=0;i<n.length;i++)h=(h+n.charCodeAt(i))%COLORS.length;return COLORS[h];};
+const ini=n=>{const p=n.trim().split(" ");return(p[0][0]+(p[1]?.[0]||"")).toUpperCase();};
+
+let PARTNERS=[],FICHAS={},activeName=null,editingId=null;
+
+function renderFichasTable(){
+  const fichas=Object.values(FICHAS).filter(f=>f.pipeline_now||f.pipeline_one||f.dev_needs||f.key_strengths||f.retention_risk||f.dev_designation);
+  document.getElementById("fichasLoading").style.display="none";
+  document.getElementById("fichasTable").style.display=fichas.length?"table":"none";
+  if(!fichas.length){document.getElementById("fichasLoading").innerHTML='<span style="color:#94a3b8;font-size:12px">No hay fichas guardadas aún</span>';document.getElementById("fichasLoading").style.display="flex";return;}
+  const fmt=d=>{if(!d)return"—";try{return new Date(d).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit",year:"numeric"});}catch{return d;}};
+  document.getElementById("fichasBody").innerHTML=fichas.map(f=>{
+    const p=PARTNERS.find(p=>p.nombre.toLowerCase()===f.nombre.toLowerCase())||{};
+    const safeName=f.nombre.replace(/'/g,"\'");
+    return`<tr>
+      <td style="font-weight:600">${f.nombre}</td>
+      <td style="color:#64748b">${p.area||"—"}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.pipeline_now||""}">${f.pipeline_now||"—"}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.pipeline_one||""}">${f.pipeline_one||"—"}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.dev_needs||""}">${f.dev_needs||"—"}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.key_strengths||""}">${f.key_strengths||"—"}</td>
+      <td><span class="pb ${f.retention_risk==="Alto"?"pb-des":f.retention_risk==="Bajo"?"pb-rm":"pb-al"}">${f.retention_risk||"—"}</span></td>
+      <td style="color:#64748b">${f.dev_designation||"—"}</td>
+      <td style="color:#94a3b8;font-size:11px">${fmt(f.updated_at)}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 9px" onclick="editFicha('${safeName}')">Editar</button>
+          <button class="btn" style="font-size:10px;padding:4px 9px;background:#fff;color:#dc2626;border-color:#fecaca" onclick="deleteFicha('${safeName}')">Eliminar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function editFicha(name){
+  // Find the partner and their cell in the ninebox, then switch to ninebox view and open card
+  const p = PARTNERS.map(merged).find(d=>d.nombre===name);
+  if(!p) return;
+  const x = PERF[p.desempeno];
+  const y = p.potY;
+  if(!x) { alert("Esta persona no tiene desempeño asignado. Edítala desde Gestión de Partners."); return; }
+  const cellKey = `${x}-${y}`;
+  // Switch to ninebox view
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("view-ninebox").classList.add("active");
+  document.querySelectorAll(".nav-tab")[0].classList.add("active");
+  // Select person
+  activeName = name;
+  renderGrid();
+  renderCard(p, cellKey);
+}
+
+async function deleteFicha(name){
+  if(!confirm(`¿Eliminar la ficha de ${name}? Esta acción no se puede deshacer.`)) return;
+  setSyncPill("saving");
+  try{
+    // Find ficha id
+    const f = FICHAS[name.toLowerCase()];
+    if(f && f.id){
+      await fetch(`${SB_URL}/rest/v1/fichas_carrera?id=eq.${f.id}`,{
+        method:"DELETE",
+        headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`}
+      });
+    }
+    delete FICHAS[name.toLowerCase()];
+    // Clear card if currently open
+    if(activeName===name){
+      activeName=null;
+      document.getElementById("careerCard").classList.remove("show");
+      document.getElementById("cardEmpty").style.display="flex";
+    }
+    renderFichasTable();
+    setSyncPill("ok");
+  }catch(e){ setSyncPill("err"); alert("Error al eliminar: "+e.message); }
+}
+
+function exportFichas(){
+  const fichas=Object.values(FICHAS);
+  if(!fichas.length){alert("No hay fichas guardadas para exportar.");return;}
+  const rows=[["Nombre","Área","Seniority","Cargo","Desempeño","Potencial","Clasificación","Pipeline Ready Now","A un movimiento","A dos movimientos","Necesidades de Desarrollo","Acciones de Desarrollo","Fortalezas Clave","Aspiraciones","Riesgo de Retención","Development Designation","Consideraciones Personales","Última Actualización"]];
+  fichas.forEach(f=>{
+    const p=PARTNERS.find(p=>p.nombre.toLowerCase()===f.nombre.toLowerCase())||{};
+    rows.push([f.nombre,p.area||"",p.seniority||"",p.cargo||"",p.desempeno||"",p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"",p.pot_class||"",f.pipeline_now||"",f.pipeline_one||"",f.pipeline_two||"",f.dev_needs||"",f.dev_actions||"",f.key_strengths||"",f.aspirations||"",f.retention_risk||"",f.dev_designation||"",f.personal_notes||"",f.updated_at||""]);
+  });
+  // Build CSV
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="FichasCarrera_NotCo_2025.csv";a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Potencial evaluation ─────────────────────────────────────────────────────
+const COMPETENCIAS = [
+  {
+    id:1, name:"Orientación a Liderar", color:"#3b82f6", scores:[1,2],
+    behs:[
+      {id:"s1", name:"Iniciativa y liderazgo", desc:"Demuestra motivación por liderar iniciativas y personas. Influye positivamente en otros y busca oportunidades de liderazgo formales e informales."},
+      {id:"s2", name:"Desarrollo de equipos",  desc:"Cultiva la capacidad y talento de los demás, inspirando y uniendo a otros hacia objetivos comunes. Invierte en el crecimiento de su equipo."}
+    ]
+  },
+  {
+    id:2, name:"Desarrollo Personal", color:"#8b5cf6", scores:[3,4],
+    behs:[
+      {id:"s3", name:"Orientación al feedback",  desc:"Busca y usa la retroalimentación activamente, aceptando la crítica constructiva. Tiene altas expectativas para sí mismo."},
+      {id:"s4", name:"Aprendizaje continuo",     desc:"Aprende de la experiencia y de los errores. Asimila nueva información rápidamente. Muestra curiosidad intelectual y amplio rango de intereses."}
+    ]
+  },
+  {
+    id:3, name:"Manejo de la Complejidad", color:"#f59e0b", scores:[5,6],
+    behs:[
+      {id:"s5", name:"Pensamiento sistémico",       desc:"Piensa en términos conceptuales desde una perspectiva amplia. Usa el pensamiento expansivo para resolver problemas y simplifica lo complejo."},
+      {id:"s6", name:"Tolerancia a la ambigüedad",  desc:"Responde de manera efectiva ante situaciones no claras. Mantiene la confianza ante la incertidumbre y se adapta rápidamente a cambios."}
+    ]
+  },
+  {
+    id:4, name:"Comunicación", color:"#10b981", scores:[7,8],
+    behs:[
+      {id:"s7", name:"Capacidad de escucha",     desc:"Presta atención genuina a lo que otros expresan. Hace preguntas que profundizan la comprensión y demuestra interés real por las perspectivas ajenas."},
+      {id:"s8", name:"Habilidad comunicacional", desc:"Transmite ideas con claridad y adaptación al interlocutor. Ajusta su estilo según el contexto y logra alinear, persuadir e inspirar."}
+    ]
+  }
+];
+
+let potScores = {s1:null,s2:null,s3:null,s4:null,s5:null,s6:null,s7:null,s8:null};
+let potCurrentPerson = null;
+
+function buildPotSelect(){
+  // Build area filter
+  const areaSel = document.getElementById("potAreaFilter");
+  const currArea = areaSel ? areaSel.value : "";
+  if(areaSel && areaSel.options.length <= 1){
+    const areas = ["Todas las áreas",...Array.from(new Set(PARTNERS.map(p=>p.area))).filter(Boolean).sort()];
+    areaSel.innerHTML = "";
+    areas.forEach(a=>{const o=document.createElement("option");o.value=a==="Todas las áreas"?"":a;o.textContent=a;areaSel.appendChild(o);});
+    if(currArea) areaSel.value = currArea;
+  }
+  // Build person dropdown
+  const sel = document.getElementById("potPersonSelect");
+  const curr = sel.value;
+  sel.innerHTML = '<option value="">Seleccionar persona...</option>';
+  const areaFilter = areaSel ? areaSel.value : "";
+  const filtered = [...PARTNERS]
+    .filter(p => !areaFilter || p.area === areaFilter)
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  filtered.forEach(p=>{
+    const o = document.createElement("option");
+    o.value = p.nombre;
+    const evalTag = (p.pot_avg!==null&&p.pot_avg!==undefined) ? ` ✓` : "";
+    o.textContent = p.nombre + evalTag;
+    if(p.nombre === curr) o.selected = true;
+    sel.appendChild(o);
+  });
+  // Reset form if selected person not in filtered list
+  if(curr && !filtered.find(p=>p.nombre===curr)){
+    document.getElementById("potForm").style.display="none";
+    document.getElementById("potPersonInfo").style.display="none";
+    document.getElementById("savePotBtn").style.display="none";
+    potCurrentPerson=null;
+  }
+}
+
+function loadPotPerson(){
+  const name = document.getElementById("potPersonSelect").value;
+  if(!name){ document.getElementById("potForm").style.display="none"; document.getElementById("potPersonInfo").style.display="none"; document.getElementById("savePotBtn").style.display="none"; return; }
+  const p = PARTNERS.find(d=>d.nombre===name);
+  if(!p) return;
+  potCurrentPerson = p;
+
+  // Show person info
+  const av = document.getElementById("potAvatar");
+  av.style.background = gc(p.nombre);
+  av.textContent = ini(p.nombre);
+  document.getElementById("potPersonName").textContent = p.nombre;
+  document.getElementById("potPersonSub").textContent = (p.cargo||"—") + " · " + (p.area||"—");
+  document.getElementById("potPersonInfo").style.display = "flex";
+
+  // Load existing scores
+  potScores = {
+    s1: p.pot_score_1||null, s2: p.pot_score_2||null,
+    s3: p.pot_score_3||null, s4: p.pot_score_4||null,
+    s5: p.pot_score_5||null, s6: p.pot_score_6||null,
+    s7: p.pot_score_7||null, s8: p.pot_score_8||null
+  };
+
+  renderPotForm();
+  document.getElementById("potForm").style.display = "block";
+  document.getElementById("savePotBtn").style.display = "flex";
+  calcResults();
+}
+
+function renderPotForm(){
+  const grid = document.getElementById("potCompGrid");
+  grid.innerHTML = COMPETENCIAS.map(comp=>`
+    <div class="comp-section">
+      <div class="comp-section-hdr">
+        <div class="sdot" style="background:${comp.color}"></div>
+        <h3>${comp.name}</h3>
+      </div>
+      <div class="comp-section-body">
+        ${comp.behs.map(b=>`
+          <div class="beh-item">
+            <div class="beh-name">${b.name}</div>
+            <div class="beh-desc">${b.desc}</div>
+            <div class="beh-scale">
+              ${[1,2,3].map(v=>`
+                <button class="scale-btn ${potScores[b.id]===v?'sel-'+v:''}" onclick="setScore('${b.id}',${v},this)">
+                  ${v === 1 ? "1 · Bajo" : v === 2 ? "2 · Medio" : "3 · Alto"}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+
+function setScore(id, val, btn){
+  potScores[id] = val;
+  // Update button styles in that row
+  const row = btn.parentElement;
+  row.querySelectorAll(".scale-btn").forEach((b,i)=>{
+    b.className = "scale-btn";
+    if(i+1 === val) b.classList.add("sel-"+val);
+  });
+  calcResults();
+}
+
+function calcResults(){
+  const compAvgs = COMPETENCIAS.map(comp=>{
+    const vals = comp.behs.map(b=>potScores[b.id]).filter(v=>v!==null);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+  const colors = ["#3b82f6","#8b5cf6","#f59e0b","#10b981"];
+  compAvgs.forEach((avg,i)=>{
+    const el = document.getElementById("rv-"+(i+1));
+    const card = document.getElementById("res-"+(i+1));
+    if(avg!==null){
+      el.textContent = avg.toFixed(2);
+      el.style.color = colors[i];
+      card.style.borderColor = colors[i]+"44";
+    } else {
+      el.textContent = "—"; el.style.color="#94a3b8"; card.style.borderColor="#e2e8f0";
+    }
+  });
+  const validAvgs = compAvgs.filter(v=>v!==null);
+  const total = validAvgs.length ? validAvgs.reduce((a,b)=>a+b,0)/validAvgs.length : null;
+  const totalEl = document.getElementById("rvTotal");
+  const classEl = document.getElementById("rvClass");
+  const card = document.getElementById("resTotal");
+  if(total!==null){
+    totalEl.textContent = total.toFixed(2);
+    const cls = total>=2.5?"Alto":total>=1.5?"Medio":"Bajo";
+    classEl.textContent = cls;
+    if(cls==="Alto"){totalEl.style.color="#15803d";classEl.style.color="#15803d";card.style.borderColor="#86efac";card.style.background="#f0fdf4";}
+    else if(cls==="Medio"){totalEl.style.color="#1d4ed8";classEl.style.color="#1d4ed8";card.style.borderColor="#93c5fd";card.style.background="#eff6ff";}
+    else{totalEl.style.color="#dc2626";classEl.style.color="#dc2626";card.style.borderColor="#fecaca";card.style.background="#fef2f2";}
+  } else {
+    totalEl.textContent="—";totalEl.style.color="#94a3b8";classEl.textContent="Sin datos";classEl.style.color="#94a3b8";card.style.borderColor="#e2e8f0";card.style.background="#fff";
+  }
+}
+
+async function savePotencial(){
+  if(!potCurrentPerson){return;}
+  setSyncPill("saving");
+  const btn=document.getElementById("savePotBtn");if(btn)btn.disabled=true;
+
+  const compAvgs = COMPETENCIAS.map(comp=>{
+    const vals=comp.behs.map(b=>potScores[b.id]).filter(v=>v!==null);
+    return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+  });
+  const validAvgs=compAvgs.filter(v=>v!==null);
+  const total=validAvgs.length?validAvgs.reduce((a,b)=>a+b,0)/validAvgs.length:null;
+  const cls=total!=null?(total>=2.5?"Alto":total>=1.5?"Medio":"Bajo"):null;
+
+  // Auto-calculate talent tag based on potencial + desempeno
+  function calcTalentTag(potClass, desempeno){
+    if(!potClass || potClass==="Sin datos" || potClass==="Bajo") return "";
+    if(potClass==="Alto" && desempeno==="Role Model") return "Key Talent";
+    if(potClass==="Alto" && desempeno==="Alineado") return "High Potential";
+    if(potClass==="Medio" && desempeno==="Role Model") return "Talent";
+    return "";
+  }
+  const desempeno = potCurrentPerson.desempeno||"";
+  const autoTag = calcTalentTag(cls, desempeno);
+
+  try{
+    await sbUpsert("partners",{
+      id: potCurrentPerson.id,
+      nombre: potCurrentPerson.nombre,
+      pot_score_1:potScores.s1, pot_score_2:potScores.s2,
+      pot_score_3:potScores.s3, pot_score_4:potScores.s4,
+      pot_score_5:potScores.s5, pot_score_6:potScores.s6,
+      pot_score_7:potScores.s7, pot_score_8:potScores.s8,
+      pot_avg:total, pot_class:cls,
+      talent:autoTag,
+      updated_at:new Date().toISOString()
+    });
+    // Update local cache
+    const idx=PARTNERS.findIndex(p=>p.nombre===potCurrentPerson.nombre);
+    if(idx>=0){
+      PARTNERS[idx]={...PARTNERS[idx],pot_score_1:potScores.s1,pot_score_2:potScores.s2,pot_score_3:potScores.s3,pot_score_4:potScores.s4,pot_score_5:potScores.s5,pot_score_6:potScores.s6,pot_score_7:potScores.s7,pot_score_8:potScores.s8,pot_avg:total,pot_class:cls,talent:autoTag};
+      potCurrentPerson=PARTNERS[idx];
+    }
+    renderGrid();
+    renderTable();
+    buildPotSelect();
+    setSyncPill("ok");
+  }catch(e){setSyncPill("err");}
+  if(btn)btn.disabled=false;
+}
+
+async function loadAll(){
+  try{
+    const[partners,fichas]=await Promise.all([sbGet("partners","?select=*&order=nombre"),sbGet("fichas_carrera","?select=*")]);
+    PARTNERS=partners;FICHAS={};fichas.forEach(f=>FICHAS[f.nombre.toLowerCase()]=f);
+    buildFilters();buildPotSelect();renderGrid();renderTable();renderFichasTable();setSyncPill("ok");
+    document.getElementById("nbLoading").style.display="none";
+    document.getElementById("nbContent").style.display="block";
+    document.getElementById("adminLoading").style.display="none";
+    document.getElementById("adminTable").style.display="table";
+  }catch(e){
+    setSyncPill("err");
+    document.getElementById("nbLoading").innerHTML=`<span style="color:#dc2626;font-size:12px">Error al cargar: ${e.message}</span>`;
+    document.getElementById("nbLoading").style.display="flex";
+    console.error("Load error:",e);
+  }
+}
+
+async function reloadData(){
+  document.getElementById("nbLoading").style.display="flex";document.getElementById("nbContent").style.display="none";
+  document.getElementById("adminLoading").style.display="flex";document.getElementById("adminTable").style.display="none";
+  setSyncPill("saving");await loadAll();
+}
+
+function merged(p){
+  const f=FICHAS[p.nombre.toLowerCase()]||{};
+  const potY=p.pot_avg!=null?(p.pot_avg>=2.5?3:p.pot_avg>=1.5?2:1):((p.talent||"").toLowerCase().includes("key talent")?3:2);
+  return {...p,potY,pipelineNow:f.pipeline_now||"",pipelineOne:f.pipeline_one||"",pipelineTwo:f.pipeline_two||"",devNeeds:f.dev_needs||"",devActions:f.dev_actions||"",keyStrengths:f.key_strengths||"",aspirations:f.aspirations||"",personalNotes:f.personal_notes||"",retentionRisk:f.retention_risk||"",devDesig:f.dev_designation||""};
+}
+
+function buildFilters(){
+  const areas=["Todas las áreas",...Array.from(new Set(PARTNERS.map(p=>p.area))).filter(Boolean).sort()];
+  ["areaFilter","areaFilter2"].forEach(id=>{const sel=document.getElementById(id);sel.innerHTML="";areas.forEach(a=>{const o=document.createElement("option");o.textContent=a;sel.appendChild(o);});});
+}
+
+function getFiltered(areaId="areaFilter",searchId=null,perfId=null){
+  let d=PARTNERS.map(merged);
+  const a=document.getElementById(areaId)?.value;
+  if(a&&a!=="Todas las áreas")d=d.filter(p=>p.area===a);
+  if(searchId){const q=(document.getElementById(searchId)?.value||"").toLowerCase();if(q)d=d.filter(p=>p.nombre.toLowerCase().includes(q));}
+  if(perfId){const pf=document.getElementById(perfId)?.value||"";if(pf)d=d.filter(p=>p.desempeno===pf);}
+  return d;
+}
+
+function renderGrid(){
+  const data=getFiltered("areaFilter");
+  const placed=data.filter(p=>PERF[p.desempeno]);
+  const noEval=data.filter(p=>!PERF[p.desempeno]).length;
+  const hasPot=PARTNERS.some(p=>p.pot_avg!=null);
+  document.getElementById("gridSubtitle").textContent=`${placed.length} evaluados · ${noEval} sin evaluación · ${hasPot?"Potencial calculado":"Potencial por tag"}`;
+  const byCell={};placed.forEach(p=>{const k=`${PERF[p.desempeno]}-${p.potY}`;if(!byCell[k])byCell[k]=[];byCell[k].push(p);});
+  const grid=document.getElementById("grid");grid.innerHTML="";
+  [3,2,1].forEach(y=>{
+    const row=document.createElement("div");row.className="grid-row";
+    [1,2,3].forEach(x=>{
+      const k=`${x}-${y}`,m=CM[k],ppl=byCell[k]||[];
+      const cell=document.createElement("div");cell.className="cell";cell.style.cssText=`background:${m.bg};border-color:${m.ac}55`;
+      cell.innerHTML=`<div class="cell-lbl" style="color:${m.ac}">${m.l}</div><div class="dots" id="dw-${k}"></div><div class="cell-count" style="color:${m.dk?"rgba(255,255,255,.5)":"#94a3b8"}">${ppl.length} ${ppl.length===1?"persona":"personas"}</div>`;
+      row.appendChild(cell);
+      const dw=cell.querySelector(`#dw-${k}`);
+      ppl.forEach(p=>{
+        const d=document.createElement("div");
+        const hasEval=p.pot_avg!==null&&p.pot_avg!==undefined;
+        const isKT=p.talent==="Key Talent";
+        const isHP=p.talent==="High Potential";
+        const isT=p.talent==="Talent";
+        const dotBg=isKT?"#166534":isHP?"#1d4ed8":isT?"#6d28d9":hasEval?"#475569":gc(p.nombre);
+        d.className="dot"+(isKT?" kt":"")+(activeName===p.nombre?" active":"")+(hasEval?" evaluated":"");
+        d.style.background=dotBg;
+        const tagLabel=p.talent?(" · "+p.talent):"";
+        d.title=p.nombre+(hasEval?` · Potencial: ${Number(p.pot_avg).toFixed(2)} (${p.pot_class})`:" · Sin evaluación")+tagLabel;
+        d.textContent=ini(p.nombre);
+        d.addEventListener("click",()=>selectPerson(p.nombre,k));dw.appendChild(d);
+      });
+      if(!ppl.length){const e=document.createElement("span");e.style.cssText="font-size:10px;color:#94a3b8;opacity:.4";e.textContent="—";dw.appendChild(e);}
+    });
+    grid.appendChild(row);
+  });
+  const tt=(byCell["3-3"]||[]).length,kt=placed.filter(p=>(p.talent||"").toLowerCase().includes("key talent")).length;
+  const rm=placed.filter(p=>p.desempeno==="Role Model").length,des=placed.filter(p=>p.desempeno==="Desalineado").length;
+  const hp=placed.filter(p=>p.talent==="High Potential").length;
+  const tl=placed.filter(p=>p.talent==="Talent").length;
+  document.getElementById("stats").innerHTML=[{l:"Key Talent",v:tt,c:"#166534"},{l:"High Potential",v:hp,c:"#1d4ed8"},{l:"Talent",v:tl,c:"#6d28d9"},{l:"Desalineados",v:des,c:"#dc2626"}].map(s=>`<div class="stat" style="border-left-color:${s.c}"><div class="stat-n" style="color:${s.c}">${s.v}</div><div class="stat-l">${s.l}</div></div>`).join("");
+}
+
+function selectPerson(name,cellKey){
+  activeName=name;renderGrid();
+  const p=PARTNERS.map(merged).find(d=>d.nombre===name);
+  if(p){
+    renderCard(p,cellKey);
+    loadChecklist(p);
+    setTimeout(()=>{
+      const scores=[p.pot_score_1,p.pot_score_2,p.pot_score_3,p.pot_score_4,p.pot_score_5,p.pot_score_6,p.pot_score_7,p.pot_score_8];
+      const hasPot=scores.some(s=>s!=null);
+      if(hasPot){
+        drawRadar(scores);
+        const el=document.getElementById("behDetailList");
+        if(el) el.innerHTML=buildBehDetailList(scores);
+      }
+    },50);
+  }
+}
+
+
+// ── Helper: build radar section HTML ─────────────────────────────────────────
+function buildRadarSection(hasPot){
+  if(!hasPot) return "";
+  return "<div class='radar-section'>"
+    +"<div class='section-hdr'><div class='sdot' style='background:#f59e0b'></div><h3>Mapa de Potencial</h3></div>"
+    +"<div class='radar-body'>"
+    +"<div class='radar-canvas-wrap'><canvas id='radarChart' width='190' height='190'></canvas></div>"
+    +"<div class='beh-detail-list' id='behDetailList'></div>"
+    +"</div></div>";
+}
+
+// ── Helper: build beh detail list HTML ───────────────────────────────────────
+function buildBehDetailList(scores){
+  const behs=[
+    {lbl:"Iniciativa y liderazgo",i:0,c:"#3b82f6"},
+    {lbl:"Desarrollo de equipos",i:1,c:"#3b82f6"},
+    {lbl:"Orientación al feedback",i:2,c:"#8b5cf6"},
+    {lbl:"Aprendizaje continuo",i:3,c:"#8b5cf6"},
+    {lbl:"Pensamiento sistémico",i:4,c:"#f59e0b"},
+    {lbl:"Tolerancia a la ambigüedad",i:5,c:"#f59e0b"},
+    {lbl:"Capacidad de escucha",i:6,c:"#10b981"},
+    {lbl:"Habilidad comunicacional",i:7,c:"#10b981"},
+  ];
+  return behs.map(function(b){
+    const s=scores[b.i];
+    const pct=s!=null?(s/3)*100:0;
+    const scoreColor=s===3?"#15803d":s===2?"#1d4ed8":s===1?"#dc2626":"#94a3b8";
+    const scoreVal=s!=null?s:"—";
+    return "<div class='beh-detail-item'>"
+      +"<div class='beh-detail-dot' style='background:"+b.c+"'></div>"
+      +"<span class='beh-detail-name'>"+b.lbl+"</span>"
+      +"<div class='beh-detail-bar'><div class='beh-detail-fill' style='width:"+pct+"%;background:"+b.c+"'></div></div>"
+      +"<span class='beh-detail-score' style='color:"+scoreColor+"'>"+scoreVal+"</span>"
+      +"</div>";
+  }).join("");
+}
+
+// ── Positions catalog ─────────────────────────────────────────────────────────
+const POSITIONS = ["AI Chef Sr Analyst", "AI Chef Team Leader", "AI Cheff Intern", "AI Culinary Scientist Manager", "AI Developer Chef Analyst", "AI Developer Chef Associate Analyst", "AI Developer Chef Sr Analyst", "AI Research Chef Analyst", "AI Research Chef Team Leader", "Account Payable & Treasury Sr Analyst", "Accounting & Treasury Manager", "Accounting Manager", "Accounting Sr Analyst", "Accounting and Consolidation Manager", "Accounts Payable & Treasury Analyst", "Accounts Payable Team Leader", "Analyst", "Analytics Associate Analyst", "Analytics Scientist II", "Assoc Analyst", "B2B Business Development Team Leader", "B2B Director", "B2B Scientist I", "B2B Scientist II", "B2B Sr. Scientist I", "B2B Team Leader", "BIOLOGICAL SCIENCES MANAGER", "Billing & Collection Sr Analyst (ARG + HQ)", "Billing & Collection Team Leader", "Brand Experience Analyst", "Brand Manager Team Leader Cono Sur", "Brand Sr Analyst", "Brand Team Leader", "Business Development Manager", "Business Excellence Team Leader", "Business Inteligence Manager", "CEO & Founder", "COMEX & Logistic Asocc Analyst", "COMEX Analyst", "COO & President", "CPFR Analyst", "CPFR Sr. Analyst", "CTO & Co-Founder", "Category Analyst", "Category Assoc Analyst", "Category Team Leader", "Chemical Sciences Team Leader", "Chief Financial Officer", "Chief Human Resources Officer", "Chief R&D Officer", "Cleaning Assistant Auxiliary", "Comex Sr Analyst", "Commercial Director Chile & Expansion", "Commercial Manager Chile", "Commercial Planning Sr Analyst", "Commercial Sr Manager", "Controller Manager", "Controller VP", "Copacker Sr Analyst", "Cost Sr Analyst", "Culinary Chef", "Culinary Director", "Customer Service Assoc Analyst", "Data Enginieering Intern", "Demand Planner Cost Logistic Sr. Analyst", "Demand Planner Team Leader", "Design Sr Analyst", "Designer Senior Manager", "Disruptive Innovation PMO Manager", "E-commerce Sr Analyst", "Expansion Brand Manager", "Export Sr. Analyst", "Facilities Manager", "Facility Management Analyst", "Field Sales Analyst", "Field Sales Executive Canal Moderno", "Finance Account Manager", "Finance Accounting Sr Analyst", "Finance Analyst", "Finance Assoc Analyst", "Finance Intern", "Finance Manager", "Finance Team Leader", "Finance, HR & Operations Director", "Financial Analyst", "Financial Planning Director", "Finish Goods Team Leader", "Food Science Director", "General Counsel Senior Director", "General Manager - Director", "Gestora Inclusión", "Giuseppe Adoption Team Leader", "Global Brand Sr. Manager", "Global Innovation Analyst", "Global Innovation Team Leader", "Global PBP Sr Manager", "Head of Product Management", "Inventory Sr Analyst", "Invoice Analyst", "JV Manager", "KAE Wholesalers & Distributors Sr. Analyst", "KAM E-Commerce Assoc Analyst", "KAM Food Service", "KAM Modern & Digital Sr. Analyst", "KAM Modern Sr. Analyst", "KAM Sr. Analyst", "KAM Team Leader", "KAM Tradicional, FS & Mayorista Team Leader", "Key Account Team Leader", "Kitchen Administrator Sr. Analyst", "LATAM Procurement Sr Manager", "Lead Product Designer", "Legal Manager", "Legal Team Leader", "Logistic Analyst", "Logistics & Customer Team Lead", "Logistics Assoc Analyst", "Logistics Customer Analyst", "Logistics Intern", "Logistics Team Leader", "MRP Analyst", "Machine Learning Engineer", "Machine Learning Engineer L2", "Machine Learning Engineer L3", "Machine Learning Engineer L4", "Machine Learning Engineer L5", "Machine Learning Engineering Manager", "Manufacturing Intern", "Manufacturing Manager", "Manufacturing Manager Conosur", "Manufacturing Sr Analyst", "Manufacturing Sr. Manager", "Manufacturing Team Leader", "Marketing & Trade Manager", "Marketing Analyst", "Marketing Assoc Analyst", "Marketing Intern", "Marketing Manager Conosur", "Marketing Sr Manager", "Marketing Sr. Analyst", "Marketing Team Leader", "Mexico Country Manager", "Microbiology Analyst", "Microbiology Associate Analyst", "Microbiology Scientist II", "Modern & Digital Manager", "Nutrition Scientist I", "Nutrition Scientist II", "Nutrition Technitian", "Office Manager / HR Coordinator - SF", "Operations Analyst", "Operations Manager", "Operations Sr. Analyst", "Order To Cash Associate Analyst", "PBP Sr Manager", "PBP Team Leader", "PMO Analyst", "PMO Intern", "PMO Team Leader", "Packaging Analyst", "Packaging Sr Manager", "Payroll Analyst", "People Auxiliary", "People Business Partner Assoc. Analyst", "People Experience & Tech HRBP Team Leader", "People Team Leader", "Pilot Technician", "Planning Associate Analyst", "Pleno Logistics Analyst", "Procurement Analyst", "Procurement Assoc. Analyst", "Procurement Manager", "Procurement Sr Analyst", "Procurement Team Leader", "Product Dev Sr Scientist I Meat & Dairy", "Product Developer Scientist II", "Product Development Scientist II", "Product Development Scientist II Dairy", "Product Development Sr Analyst", "Product Manager Analyst", "Product Manager Sr. Analyst", "Product Manager Team Leader", "Product Porfolio & Innovation Team Leader", "Product Portfolio & Innovation Analyst", "Product Sr Team Lead", "Product Team Leader", "Production Planning Team Leader", "Project Intern", "Project Management Sr Analyst", "Project Manager Team Leader", "Quality Analyst", "Quality Auditor Analyst", "Quality Auditor Sr Analyst", "Quality Intern", "Quality Management Associate Analyst", "Quality Management System Analyst in House", "Quality Manager", "Quality Team Leader", "R&D Analyst", "R&D Associate Analyst", "R&D B2B LATAM Manager", "R&D B2B VP Noram", "R&D Intern", "R&D Lead", "R&D Manager", "R&D Manager Meat & Dressings", "R&D PMO Manager", "R&D Sr Analyst", "R&D Sr Manager", "R&D Team Leader", "Research Sr Manager", "Retail Ops Sr. Analyst", "S&OP & Logistics Manager", "SAP & Cyber Security IT Team Leader", "SAP Data Master Sr Engineer", "Sales Analyst", "Sales Executive Analyst", "Sales Manager SP", "Sales Sr. Analyst", "Sales Sr. Executive", "Sales Sr. Manager Argentina", "Sales Team Leader", "Scalability Sr Analyst", "Scientist I, R&D Product Development", "Scientist II, AI Tech Application", "Senior Scientist I, AI Tech Application", "Senior Scientist I, Product Development", "Senior Team Leader, Product Developer", "Sensory Analyst", "Sensory Management, Scientist II", "Sensory Scientist I", "Sensory Scientist II", "Software Engineer", "Software Engineer Intern", "Software Engineer L1", "Software Engineer L2", "Software Engineer L3", "Software Engineer L5", "Software Engineer L7", "Software Engineer Sr. Team Leader", "Software Engineering Manager", "Software Engineering Team Leader", "Sr Analyst", "Sr Scientist I B2B", "Sr Software Engineer", "Sr. SAP Developer", "Sr. UX/UI Designer", "Strategic Growth Sr. Director", "Strategic Partnership Sr Analyst", "Strategic Partnership Team Leader", "Strategic Planning Sr. Manager", "Strategic Planning Team Leader", "Supply Chain & Operations Director", "Supply Chain Finance Team Leader", "Supply Planner Analyst", "Supply Planner Sr Analyst", "Talent Acquisition Senior Manager", "Top Line Manager", "Total Rewards Manager", "Trade Marketing Analyst", "Trade Marketing Team Leader", "Trade Sr. Analyst", "Transports Analyst", "Treasury Sr. Analyst", "UX & Product Sr. Manager", "VP Finance LATAM", "VP Foods LATAM", "VP Marketing Global", "VP, People - NORAM", "e-commerce executive"];
+const TENURE_MAP = {
+  "Adrián Soto Suárez": "1 year and 26 days",
+  "Agostina Chiappetta": "1 year, 10 months and 16 days",
+  "Agustina Di Corinto": "4 years, 6 months and 16 days",
+  "Agustina Pederiva": "5 months and 4 days",
+  "Agustin Krebs": "3 years and 18 days",
+  "Alain Descazeaux": "6 years, 2 months and 2 days",
+  "Alejandra Noriega": "1 year, 10 months and 2 days",
+  "Alejandra Peña": "2 years and 28 days",
+  "Alfredo Medina": "1 year, 7 months and 28 days",
+  "Aliane Bernardes de Andrade": "6 years, 9 months and 28 days",
+  "Alisia Heath": "2 years, 2 months and 19 days",
+  "Alondra Garcia Loarte": "3 years and 23 days",
+  "Alonso Ignacio Vargas Estay": "2 years and 5 days",
+  "Amaia Juanchuto Belmar": "2 years, 5 months and 12 days",
+  "Amanda Morais": "4 years, 4 months and 13 days",
+  "Ana Batista": "5 years, 7 months and 10 days",
+  "Ana Carvalho": "1 month and 6 days",
+  "Ana Karina Rodriguez": "11 months and 1 day",
+  "Ana Paula De La Torre": "6 months and 28 days",
+  "Anderson Da Silva Ramalho": "4 years, 2 months and 19 days",
+  "Andrea Aranda": "2 months and 24 days",
+  "Andrea Cardenas": "9 months and 29 days",
+  "Andrea González Pozo": "11 months and 22 days",
+  "Andrea Lago": "2 months and 13 days",
+  "Andres Cerda": "4 months and 4 days",
+  "Andrew Cummings": "3 years, 9 months and 9 days",
+  "Angela Toomer": "3 years, 10 months and 13 days",
+  "Angeline Ivette Riquelme": "6 years, 2 months and 9 days",
+  "Antonela Alvarez": "3 years, 9 months and 16 days",
+  "Antonia Puentes": "8 months and 15 days",
+  "Antonia Stevens": "2 months and 24 days",
+  "Ariadna Fernandez": "4 years, 2 months and 26 days",
+  "Ariel Perez": "2 years, 5 months and 20 days",
+  "Arthur Elias": "11 months and 22 days",
+  "Azul Lefebvre": "1 year, 7 months and 19 days",
+  "Barbara Bianchi": "4 years, 1 month and 22 days",
+  "Barbara Espinoza": "6 months and 7 days",
+  "Barbara Valenzuela": "3 years, 7 months and 28 days",
+  "Bautista Bulfon": "2 months and 17 days",
+  "Beatriz Schuttoff de Mello Barreto": "2 years and 21 days",
+  "Beatriz Vieira da Cunha Arantes": "4 years and 26 days",
+  "Becky Reith": "1 year, 7 months and 17 days",
+  "Benjamin Ian Earle": "3 years, 2 months and 26 days",
+  "Bernardita Huidobro": "3 months and 28 days",
+  "Bernardita San Martin Abarca": "1 year, 5 months and 23 days",
+  "Bernardo Moltedo": "5 years, 6 months and 28 days",
+  "Bruna Barros Rodrigues": "1 year, 11 months and 26 days",
+  "Bruno Sepulveda Orellana": "4 years, 10 months and 19 days",
+  "Bryce Mooney": "2 years, 9 months and 29 days",
+  "Byron Fernando Riffo": "2 years, 1 month and 26 days",
+  "Cami Espina": "1 year, 7 months and 24 days",
+  "Camila Anastassia Covarrubias": "6 years, 1 month and 5 days",
+  "Camila Fernanda González": "2 years, 7 months and 8 days",
+  "Camila Francisco": "6 years, 4 months and 25 days",
+  "Camila Marino": "3 years, 11 months and 1 day",
+  "Camila Souto": "2 months and 10 days",
+  "Camila Souza": "7 months and 4 days",
+  "Camila Varas": "9 months and 27 days",
+  "Candelaria Noceti": "1 year, 8 months and 27 days",
+  "Carla Diana Pino": "6 years, 10 months and 9 days",
+  "Carlos Alberto Rojas": "2 years, 5 months and 1 day",
+  "Carlos Chavez": "1 year, 3 months and 20 days",
+  "Carlos Priego": "9 months and 27 days",
+  "Carlos Vilches": "6 months and 21 days",
+  "Carlos Villanueva": "3 years, 4 months and 27 days",
+  "Carmen Gloria Ferrada": "4 years, 3 months and 13 days",
+  "Carolina Abigail Paduro": "1 year, 2 months and 28 days",
+  "Carolina Acosta Calderon": "4 years, 6 months and 16 days",
+  "Carolina Andrea Pérez": "2 years, 3 months and 7 days",
+  "Carolina Frias": "4 months",
+  "Carolina Pinto": "1 year, 2 months and 23 days",
+  "Carolina Tinnirello": "4 months and 26 days",
+  "Catalina Donoso": "6 years, 6 months and 4 days",
+  "Catalina Larrain": "1 year, 8 months and 14 days",
+  "Catalina Pelet Abeleida": "2 years, 3 months and 13 days",
+  "Catalina Poblete": "4 months and 15 days",
+  "Catalina Rondineau": "4 years, 6 months and 9 days",
+  "Caterina Daniela Vargas": "3 years, 3 months and 4 days",
+  "Catriel Giuliano": "6 years, 1 month and 14 days",
+  "Cecilia Kainz": "3 years, 10 months and 20 days",
+  "Cecilia Olcese": "7 months and 25 days",
+  "Cecilia Pato Vionnet": "4 years, 11 months and 10 days",
+  "Cesar Oswaldo Avancini": "2 years, 4 months and 1 day",
+  "Clara Silva Di Cunto": "5 years and 21 days",
+  "Claudia Andrea Vidal": "3 years, 7 months and 17 days",
+  "Clemente Jose Ramirez": "7 months and 14 days",
+  "Constanza Anania": "3 years, 5 months and 5 days",
+  "Constanza Diaz": "10 months and 6 days",
+  "Constanza Francisca Ruiz Bustos": "3 years, 5 months and 14 days",
+  "Constanza Fuentealba": "3 years, 1 month and 9 days",
+  "Constanza Mora": "2 years, 10 months and 7 days",
+  "Constanza Navarro Abbott": "8 months and 8 days",
+  "Cristián D'Alençon": "10 months and 6 days",
+  "Cristian Guillermo Carrasco": "3 years, 11 months and 25 days",
+  "Cristian Vivanco": "27 days",
+  "Cristian Yam Tsi Li-Jo": "2 years, 7 months and 23 days",
+  "Cristobal Fernandez": "1 year, 2 months and 22 days",
+  "Daniela Bruzzone": "4 months and 12 days",
+  "Daniela Constanza Muñoz": "2 years, 8 months and 8 days",
+  "Daniela Miracula": "3 years and 22 days",
+  "Daniela Monje": "1 year, 5 months and 29 days",
+  "Daniela Reyes Callejas": "6 days",
+  "Daniela Vivanco": "1 year, 6 months and 29 days",
+  "Daniele Martins": "7 months and 25 days",
+  "Daniel Juárez Peña": "3 years, 5 months and 26 days",
+  "Daniel Pacheco": "1 year, 1 month and 5 days",
+  "Daniel Saad": "1 month and 20 days",
+  "David Daniel Torres": "5 years, 6 months and 15 days",
+  "David Gabriel Moya": "6 years, 8 months and 28 days",
+  "Dayse Da Silva Ruano": "6 years, 2 months and 20 days",
+  "Delfina Stolbizer": "1 year, 11 months and 6 days",
+  "Desireé Castaño": "7 months and 25 days",
+  "Diego Alonso Fernandez": "3 years, 1 month and 23 days",
+  "Diego Andrés Piña": "2 years, 5 months and 3 days",
+  "Diego Araneda": "3 years, 3 months and 26 days",
+  "Diego Ignacio Gomez": "2 years, 4 months and 5 days",
+  "Diego Jara Toro": "8 months and 13 days",
+  "Dominique Soto": "2 months and 16 days",
+  "Doris Soledad Lefian": "6 years, 10 months and 23 days",
+  "Dulce Vazquez": "2 months and 17 days",
+  "Edgar Bernal": "9 months and 27 days",
+  "Edmundo Lutter": "4 years, 3 months and 23 days",
+  "Elena Consuelo Coello": "2 years, 7 months and 23 days",
+  "Elena Yepes": "10 months and 17 days",
+  "Elisabete Aparecida Fracarolli": "2 years and 18 days",
+  "Emily Heckman": "6 months and 13 days",
+  "Eric Kinjo": "3 years, 9 months and 29 days",
+  "Esteban Andres Canessa": "4 years, 2 months and 15 days",
+  "Ethan Paixão de Souza": "1 year, 10 months and 23 days",
+  "Evelyn Gallegos": "5 years, 6 months and 28 days",
+  "Ezequiel Fourcade": "6 years, 5 months and 22 days",
+  "Ezequiel Sarni": "2 years and 7 months",
+  "Fabiana Bruno Magnasco": "5 years, 6 months and 8 days",
+  "Fabián Andrés Tala": "3 years, 7 months and 5 days",
+  "Facundo Devalle": "1 year, 8 months and 29 days",
+  "Federico Filipelli": "6 years, 6 months and 11 days",
+  "Federico Padin": "3 years, 9 months and 16 days",
+  "Felipe Andrés Alfero": "2 years, 5 months and 10 days",
+  "Felipe Cisternas": "1 year, 7 months and 28 days",
+  "Felipe Correa": "1 year, 6 months and 13 days",
+  "Felipe Ignacio Oyarce": "6 years and 8 days",
+  "Felipe Labbe": "8 months and 9 days",
+  "Felipe Orlando Rivera Droguett": "2 years, 4 months and 9 days",
+  "Felipe Rodrigues Su": "6 years, 2 months and 17 days",
+  "Felipe Torralba": "2 months and 24 days",
+  "Felipe Zamora": "2 months and 17 days",
+  "Fernanda Anguita": "2 years, 2 months and 25 days",
+  "Fernanda Rocha Rosati": "5 years, 6 months and 28 days",
+  "Fernando De La Huerta Alvarez": "3 years, 11 months and 22 days",
+  "Florencia Diaz": "1 year and 4 days",
+  "Florencia Villagra": "4 years, 3 months and 16 days",
+  "Francesca Tiare Albonico": "7 years and 28 days",
+  "Francisca Borquez Soto": "1 year, 5 months and 24 days",
+  "Francisca Josefa Uriarte": "2 years, 8 months and 11 days",
+  "Francisca Lathrop": "2 years and 7 days",
+  "Francisca Macarena Canales": "2 years, 8 months and 21 days",
+  "Francisco Clavero": "5 years, 9 months and 28 days",
+  "Francisco Javier Zamorano": "2 years, 4 months and 5 days",
+  "Francisco Lizana": "27 days",
+  "Francisco Morrison": "1 month and 20 days",
+  "Francisco Sanchez": "2 years and 11 months",
+  "Franco Álvarez Rosinelli": "4 months and 26 days",
+  "Gabriela Dudu Moreira": "4 years, 8 months and 17 days",
+  "Gabriela Hernandez": "4 years, 10 months and 26 days",
+  "Gabriel Alexis Bastias": "5 years, 5 months and 28 days",
+  "Gabriel Gerosevich": "2 years, 4 months and 8 days",
+  "Gabriel Pardo": "1 year, 11 months and 18 days",
+  "Gabriel Zapata": "2 months and 24 days",
+  "Gaston Lugo": "3 years, 4 months and 15 days",
+  "Genaro Santolin": "3 years, 3 months and 10 days",
+  "George Michel Tamayo": "1 year, 9 months and 26 days",
+  "Georgina Cecilia Urrutia": "7 years, 3 months and 19 days",
+  "Gianfranco Di Battista": "2 years, 9 months and 27 days",
+  "Ginette Del Valle Linares": "4 years, 1 month and 8 days",
+  "Gislaine Aparecida Ortigoza": "6 years, 3 months and 27 days",
+  "Giulia Danesi": "8 months and 19 days",
+  "Gonzalo Pla": "5 months and 9 days",
+  "Griffin Boutwell": "3 years, 9 months and 29 days",
+  "Hector Henriquez": "6 years and 19 days",
+  "Helen Tibisay Caruci": "4 years, 3 months and 28 days",
+  "Hengel Vilela Caxile": "3 years and 9 days",
+  "Humberto José Ortúzar": "3 years, 2 months and 10 days",
+  "Ignacio Cuevas": "6 months and 21 days",
+  "Ignacio Nuñez": "3 years, 11 months and 25 days",
+  "Ines Gnecco": "2 years, 7 months and 1 day",
+  "Ingrid Constanza Morales Navarro": "1 year and 17 days",
+  "Isabel Carolina Silva": "3 years, 6 months and 29 days",
+  "Isabella Cherubini": "2 months and 16 days",
+  "Isabel Ortiz Von Riegen": "1 year, 5 months and 8 days",
+  "Isidora Camus": "2 years and 11 days",
+  "Ivan dos Santos Rodrigues": "4 years, 1 month and 8 days",
+  "Jaime Moreno": "10 months and 24 days",
+  "Janaina Freri Lucas": "4 years, 11 months and 3 days",
+  "Javier": "6 years, 1 month and 3 days",
+  "Javiera Dalila Saldaña": "2 years, 10 months and 29 days",
+  "Javiera Francisca Manterola": "2 years, 5 months and 25 days",
+  "Javiera Gonzalez": "2 years, 2 months and 14 days",
+  "Javiera Irarrazabal": "1 year, 3 months and 12 days",
+  "Javiera Mujica": "7 years, 2 months and 8 days",
+  "Javiera Pizarro": "2 months and 17 days",
+  "Javiera Valentina Garces": "5 years, 11 months and 28 days",
+  "Jeronimo Sanabria": "1 year, 5 months and 26 days",
+  "Joaquin Manzo": "2 months and 10 days",
+  "Joaquin Ricci": "3 years, 7 months and 22 days",
+  "Johan Esteban Meza": "4 years and 24 days",
+  "Jorge Booth": "4 years, 11 months and 24 days",
+  "Jorge Gatica": "6 years and 27 days",
+  "Jorgelina Farina": "2 months and 10 days",
+  "Jorge Luis Perez": "1 year and 21 days",
+  "José Carlos Caris": "4 years and 20 days",
+  "Josefa Linderman": "9 months and 6 days",
+  "Josefina Irigoyen": "4 months and 28 days",
+  "Josefina Platovsky Mingo": "4 years, 6 months and 14 days",
+  "Jose Luis Bustos": "2 years, 2 months and 27 days",
+  "Jose Luis Chiarenza": "3 years, 6 months and 10 days",
+  "Jose Manuel Madriaza": "1 year, 3 months and 16 days",
+  "Jose Maria Lasa Sendic": "2 years, 10 months and 14 days",
+  "Jose Menendez": "6 years, 10 months and 27 days",
+  "Jose Miguel Orostegui": "5 years, 6 months and 24 days",
+  "José Ramón Loaiza": "4 years, 3 months and 16 days",
+  "Jose Tomas Escobar": "2 years, 6 months and 5 days",
+  "Juan Andres Moreno": "4 years and 9 months",
+  "Juan Jose Pinto": "1 year, 1 month and 29 days",
+  "Juan López": "4 months and 1 day",
+  "Juan Pablo Quinterno": "4 years, 2 months and 17 days",
+  "Juan Papayoanu": "1 year, 4 months and 18 days",
+  "Julia Christin Berning": "5 years, 7 months and 10 days",
+  "Juliana Kossling": "2 years, 2 months and 14 days",
+  "Julian Andres Moreno": "1 year and 7 months",
+  "Julieta Irigoyen": "3 years and 29 days",
+  "Julieta Naso": "1 year, 5 months and 16 days",
+  "Julieta Remollino": "1 year, 9 months and 19 days",
+  "Julio Monter": "2 years, 9 months and 14 days",
+  "Karim Pichara": "8 years, 3 months and 28 days",
+  "Karla Gonzalez": "2 months and 10 days",
+  "Karyn Perez": "6 years and 5 months",
+  "Lara Rusak": "4 years and 8 days",
+  "Larissa Lidiaque": "5 months and 28 days",
+  "Laura Quevedo Antonioli": "4 years, 6 months and 21 days",
+  "Laura Rezende": "3 months and 21 days",
+  "Laura Rodriguez": "3 years, 8 months and 11 days",
+  "Lena Jankowiak": "3 years, 11 months and 2 days",
+  "Leticia Chalde": "1 year, 11 months and 26 days",
+  "Lourdes Ghersi": "6 years, 2 months and 16 days",
+  "Luana Farias": "3 years, 4 months and 1 day",
+  "Luana Moura": "1 year, 3 months and 28 days",
+  "Lucas Bacelo": "1 year, 3 months and 28 days",
+  "Lucas Herrero": "1 year, 7 months and 12 days",
+  "Lucas Lagos": "4 months and 28 days",
+  "Luciana Neves": "2 years, 1 month and 10 days",
+  "Luciano Dugaim Paschoali": "2 years, 2 months and 19 days",
+  "Luciano Vizdal": "10 months and 14 days",
+  "Lucía Tamburro": "1 year, 8 months and 28 days",
+  "Lucia Visconti": "10 months and 24 days",
+  "Luis Alberto Cancino": "5 years, 7 months and 20 days",
+  "Luis Andres Vergara": "1 year and 26 days",
+  "Luis Guiza": "2 years and 28 days",
+  "Mabel Trujillo": "5 months and 23 days",
+  "Macarena Cantero Cherres": "2 years, 8 months and 26 days",
+  "Macarena Zañartu": "3 years, 3 months and 13 days",
+  "Maia Bhaumik": "1 year and 19 days",
+  "Majo Bastianello": "4 years, 7 months and 6 days",
+  "Manuel Céspedes": "2 months and 24 days",
+  "Manuel Lopez Revol": "4 years, 3 months and 16 days",
+  "Manuel Villa": "1 year, 4 months and 13 days",
+  "Margaret Gamboa": "7 months and 28 days",
+  "Maria Celeste Dichano": "6 months and 28 days",
+  "Maria De Las Mercedes Fuster": "3 years and 29 days",
+  "Maria Elena Concha": "5 years and 28 days",
+  "Maria Eugenia Gongora": "3 years, 3 months and 10 days",
+  "Maria Fernanda Koumian": "3 months and 15 days",
+  "Maria Florencia Kochnowicz": "4 years, 6 months and 9 days",
+  "María José Correa": "2 years, 1 month and 3 days",
+  "Maria Jose Ramirez": "3 years, 4 months and 27 days",
+  "Mariana Brizzio": "4 years, 2 months and 12 days",
+  "Mariano Moscato": "1 year, 7 months and 27 days",
+  "Maria Pia Speciali": "4 years, 6 months and 23 days",
+  "Maria Veronica Morales": "6 years, 5 months and 12 days",
+  "Maria Victoria Enriques": "3 years, 7 months and 18 days",
+  "Mariela Paz Elorrieta": "3 years, 8 months and 25 days",
+  "Marina Frias": "4 years, 1 month and 15 days",
+  "Marina Leme": "1 year, 2 months and 21 days",
+  "Mario Villalobos": "11 months and 28 days",
+  "Marisol Pizarro": "3 years, 11 months and 9 days",
+  "Martina Buscio": "11 months and 20 days",
+  "Martina Ortiz Siri": "2 months and 3 days",
+  "Martin Bergada": "4 years, 6 months and 28 days",
+  "Martin Bertoncini": "3 years and 3 days",
+  "Martin Meza": "3 months and 28 days",
+  "Matias Alvarez": "2 months and 24 days",
+  "Matias Antiñanco": "7 months and 18 days",
+  "Matías Del Franco": "2 years, 4 months and 17 days",
+  "Matias Latugaye": "4 years, 6 months and 16 days",
+  "Matias Muchnick": "8 years, 3 months and 28 days",
+  "Matías Sepúlveda": "27 days",
+  "Matthew Sujanto": "2 years, 9 months and 29 days",
+  "Mauricio Andrés Cabrera": "3 years, 10 months and 29 days",
+  "Mauricio Cifuentes": "4 months and 6 days",
+  "Mauricio Esteban Rios": "2 years, 7 months and 11 days",
+  "Mauricio Muñoz": "4 months and 28 days",
+  "Mauricio Sandoval": "1 year, 8 months and 7 days",
+  "Maximiliano Silva": "5 years, 4 months and 22 days",
+  "Max Venegas": "4 years, 1 month and 8 days",
+  "Melissa Fernanda Morano": "11 months and 19 days",
+  "Meri Jebirashvili": "5 years, 4 months and 13 days",
+  "Micaela Ludin": "4 years, 1 month and 29 days",
+  "Micaela Vanina Pirri Catini": "1 month and 6 days",
+  "Michael Jerez": "7 years and 28 days",
+  "Michelle Villarroel": "5 years and 8 months",
+  "Miguel Ángel Ferrand": "2 months and 1 day",
+  "Misael Zalazar": "4 years, 2 months and 5 days",
+  "Monserrat Fraustro": "2 years, 2 months and 21 days",
+  "Monserrat Uribarren": "2 years, 6 months and 28 days",
+  "Natalia Luján Juncua": "4 years, 1 month and 8 days",
+  "Natalia Rizzo": "4 years, 9 months and 1 day",
+  "Natalia Sandonato": "4 years, 11 months and 9 days",
+  "Natalia Vera": "4 years, 3 months and 2 days",
+  "Nebil Kawas": "6 years, 4 months and 2 days",
+  "Nicolas Abarca": "2 months and 25 days",
+  "Nicolas Andres Lemus": "3 years, 2 months and 8 days",
+  "Nicolás Hurtado": "3 months and 28 days",
+  "Nicolas Lopez Oyarzun": "8 months and 18 days",
+  "Nicolas Pereira Meeder": "6 months and 28 days",
+  "Nicolas Rasguido": "3 years, 8 months and 11 days",
+  "Nicolas Tapia": "1 year, 11 months and 28 days",
+  "Nicolas Undurraga": "1 year, 8 months and 28 days",
+  "Nicole Alejandra Ferrada": "4 years, 6 months and 14 days",
+  "Nicole Ortiz": "6 years, 5 months and 4 days",
+  "Nicole Rios Torriani": "4 years, 3 months and 28 days",
+  "Nicole Telting": "2 years, 5 months and 27 days",
+  "Olivia Lanari": "1 year, 6 months and 6 days",
+  "Oriel Andrés Muñoz Díaz": "2 years, 3 months and 16 days",
+  "Oscar Leonardo Rodriguez": "3 years, 7 months and 24 days",
+  "Pablo Kronmuller": "3 years and 16 days",
+  "Pablo Molina": "4 years, 2 months and 26 days",
+  "Pablo Veloz": "8 months and 22 days",
+  "Paloma Barthou": "2 years, 4 months and 26 days",
+  "Paolo Beltran": "3 years, 4 months and 25 days",
+  "Pascal Strongman": "10 months and 6 days",
+  "Patricio Caripan Gutierrez": "1 year, 3 months and 29 days",
+  "Patricio Javier Orellana": "6 years, 7 months and 17 days",
+  "Patrick Poon": "3 years, 11 months and 29 days",
+  "Paula Bianchetti": "2 years, 5 months and 17 days",
+  "Paula Misiac": "3 years, 10 months and 20 days",
+  "Paula Pesse": "7 years, 9 months and 25 days",
+  "Paula Piriz": "1 year, 10 months and 2 days",
+  "Paulina Schafer": "2 months and 24 days",
+  "Paulo Orta": "1 year, 8 months and 21 days",
+  "Paz Basualto Diaz": "6 months and 10 days",
+  "Pedro Mafei": "8 months and 22 days",
+  "Phoebe Wang": "13 days",
+  "Pía Llanos": "2 years, 7 months and 26 days",
+  "Prasanna Vasudevan": "4 years, 7 months and 29 days",
+  "Priyadarshini Vijjigiri": "6 months",
+  "Rafaela Alves": "3 months and 28 days",
+  "Renzo Gini": "2 years, 8 months and 22 days",
+  "Ricardo Antonio Montecinos": "1 year, 5 months and 3 days",
+  "Robert Hallinan": "2 years, 6 months and 28 days",
+  "Robert Leonardo Ramirez": "4 years, 3 months and 9 days",
+  "Roberto Alexis Flores Sealls": "4 years, 11 months and 24 days",
+  "Roberto Carlos López López": "2 years and 15 days",
+  "Rocio Inés Miño": "2 years, 2 months and 12 days",
+  "Rodolfo Eduardo Palma": "3 years, 7 months and 20 days",
+  "Rodrigo Contreras": "7 years, 4 months and 17 days",
+  "Rodrigo Vasconcellos": "1 year, 1 month and 26 days",
+  "Romina Bakulic Pedemonte": "1 year, 4 months and 22 days",
+  "Romina Falcon": "1 year, 4 months and 29 days",
+  "Romina Montealegre": "5 years and 6 months",
+  "Rommy Eskenazi": "1 year, 11 months and 10 days",
+  "Rufino Loredo": "11 months and 15 days",
+  "Santiago De Los Reyes": "1 year, 3 months and 2 days",
+  "Santiago Gallo": "1 year, 11 months and 19 days",
+  "Sebastian Donoso": "11 months and 15 days",
+  "Sebastián Flores Castillo": "4 months and 26 days",
+  "Sebastian Martinez": "1 year, 5 months and 25 days",
+  "Sebastian Mugrabi": "4 years, 10 months and 12 days",
+  "Sebastian Prunesti": "3 years, 11 months and 11 days",
+  "Sebastián Román Becerra": "4 years, 2 months and 26 days",
+  "Serena Cristofaro": "1 year, 11 months and 7 days",
+  "Sergio Alan Vera Romo": "2 years, 8 months and 12 days",
+  "Sergio Rodriguez": "6 years, 7 months and 22 days",
+  "Sharon López Cañas": "2 months and 28 days",
+  "Sofia Carolina Ruiz": "4 months and 16 days",
+  "Sofia Contreras": "1 year, 8 months and 27 days",
+  "Sofia Estrugo": "1 year, 9 months and 23 days",
+  "Sofia Michelle Chung": "1 year, 9 months and 19 days",
+  "Sofia Ruiz Lenz": "2 years, 8 months and 5 days",
+  "Sofia Yasky": "5 years, 2 months and 4 days",
+  "Solange Manosalva": "3 years, 9 months and 9 days",
+  "Soledad Francisca Cabañas": "7 years and 17 days",
+  "Tatiana Eloisa Antigual": "3 years and 23 days",
+  "Tatiana Fernanda Neira": "3 years and 28 days",
+  "Thiago Cunegundes Costa Barbosa": "6 years, 9 months and 12 days",
+  "Tina Bui": "3 years, 11 months and 9 days",
+  "Tomas Bellucci": "3 years, 8 months and 15 days",
+  "Tomás Cornejo": "2 years, 1 month and 28 days",
+  "Tomas Figueroa": "3 months",
+  "Tomas Orellana Riveros": "1 year, 3 months and 21 days",
+  "Tomás Rivera": "2 years and 9 months",
+  "Tomás Simón Hermosilla": "2 years, 1 month and 21 days",
+  "Tomas Wolberg": "1 year, 4 months and 6 days",
+  "Trinidad Franco": "6 years, 9 months and 5 days",
+  "Ulises Perucho Zempoalteca": "3 years, 7 months and 27 days",
+  "Valentina De Gregorio": "5 months and 2 days",
+  "Valentina Fischman": "1 year and 19 days",
+  "Valentina Isabel Fernandez": "2 years and 9 days",
+  "Valentina Vergara": "1 year, 8 months and 29 days",
+  "Valeria Herrera": "5 months and 28 days",
+  "Vania Lucía Utreras Cortés": "3 years, 7 months and 27 days",
+  "Vicente Alberto Oyanedel": "2 years, 7 months and 8 days",
+  "Vicente Manriquez": "7 months and 25 days",
+  "Vicente Miguel": "7 months and 25 days",
+  "Victor Arias": "7 years and 25 days",
+  "Víctor Enrique Diaz": "3 years, 11 months and 4 days",
+  "Victoria Gomez": "1 year, 7 months and 28 days",
+  "Victoria Lorente": "3 years, 6 months and 11 days",
+  "Victor Muñoz": "4 years, 1 month and 15 days",
+  "Vitória Luísa Gehrke": "7 months and 18 days",
+  "Wilson Mariano dos Santos": "4 years, 8 months and 10 days",
+  "Yanina Otero": "3 years, 9 months and 23 days",
+  "Yvan Tijoux": "5 years and 14 days",
+  "Zahra Taghva": "20 days",
+};
+
+function renderCard(p,cellKey){
+  const m=CM[cellKey],isKT=(p.talent||"").toLowerCase().includes("key talent");
+  const potDisp=p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"—";
+  const scores=[p.pot_score_1,p.pot_score_2,p.pot_score_3,p.pot_score_4,p.pot_score_5,p.pot_score_6,p.pot_score_7,p.pot_score_8];
+  const hasPot=scores.some(s=>s!=null);
+  const tenure=TENURE_MAP[p.nombre]||"—";
+  const potColor=p.pot_avg>=2.5?"#4ade80":p.pot_avg>=1.5?"#93c5fd":"#fca5a5";
+  const potColorDark=p.pot_avg>=2.5?"#15803d":p.pot_avg>=1.5?"#1d4ed8":"#dc2626";
+  const retOpts=["","Bajo","Medio","Alto"].map(v=>`<option value="${v}"${p.retentionRisk===v?" selected":""}>${v||"Seleccionar"}</option>`).join("");
+  const devOpts=["","Watch & Grow","Support Movement","Ready Now"].map(v=>`<option value="${v}"${p.devDesig===v?" selected":""}>${v||"Seleccionar"}</option>`).join("");
+  const perfColor=p.desempeno==="Role Model"?"#dcfce7":p.desempeno==="Desalineado"?"#fee2e2":"#dbeafe";
+  const perfTColor=p.desempeno==="Role Model"?"#15803d":p.desempeno==="Desalineado"?"#dc2626":"#1d4ed8";
+
+  // Position options
+  const posOpts=`<option value="">Seleccionar posición...</option>`+POSITIONS.map(pos=>`<option value="${pos.replace(/"/g,'&quot;')}">${pos}</option>`).join("");
+
+  // Parse existing pipeline values
+  const pNow=p.pipelineNow||""; const pNowOther=p.pipelineNowOther||"";
+  const pOne=p.pipelineOne||""; const pOneOther=p.pipelineOneOther||"";
+  const pTwo=p.pipelineTwo||""; const pTwoOther=p.pipelineTwoOther||"";
+  const pBNow=p.pipelineBNow||""; const pBNowOther=p.pipelineBNowOther||"";
+  const pBOne=p.pipelineBOne||""; const pBOneOther=p.pipelineBOneOther||"";
+  const pBTwo=p.pipelineBTwo||""; const pBTwoOther=p.pipelineBTwoOther||"";
+
+  document.getElementById("cardEmpty").style.display="none";
+  const card=document.getElementById("careerCard");card.classList.add("show");
+  card.innerHTML=`
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="card-header-top">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div class="card-avatar-lg" style="background:${gc(p.nombre)};${isKT?"border:3px solid #f59e0b":""}">${ini(p.nombre)}</div>
+          <div>
+            <div class="card-hname">${p.nombre}</div>
+            <div class="card-hrole">${p.cargo||"—"} · ${p.area||"—"}</div>
+            <div class="card-hbadges">
+              <span class="card-hbadge" style="background:${m.bg};color:${m.ac}">${m.l}</span>
+              <span class="card-hbadge" style="background:${perfColor};color:${perfTColor}">${p.desempeno||"—"}</span>
+              ${isKT?'<span class="card-hbadge" style="background:#fef9c3;color:#92400e">⭐ Key Talent</span>':""}
+            </div>
+          </div>
+        </div>
+        <div class="card-pot-badge">
+          <div class="pot-lbl">Potencial total</div>
+          <div class="pot-num" style="color:${potColor}">${potDisp}</div>
+          <div class="pot-cls" style="color:${potColor}">${p.pot_class||"Sin datos"}</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        <div class="card-meta-item"><label>Seniority</label><span>${p.seniority||"—"}</span></div>
+        <div class="card-meta-item"><label>Manager</label><span>${p.manager||"—"}</span></div>
+        <div class="card-meta-item"><label>Antigüedad</label><span>${tenure}</span></div>
+        <div class="card-meta-item"><label>Área</label><span>${p.area||"—"}</span></div>
+      </div>
+    </div>
+
+    <!-- PLANES DE CARRERA -->
+    <div class="plans-row">
+      <div class="plan-card plan-a">
+        <div class="plan-hdr">
+          <div class="sdot" style="background:#3b82f6"></div>
+          <h3 style="color:#1d4ed8">Plan A · Línea actual</h3>
+        </div>
+        <div class="plan-body">
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#1d4ed8;color:#fff">1</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">Ready Now</div>
+              <select class="plan-step-select" id="pipe_now" onchange="checkOther('pipe_now','pipe_now_other')">
+                ${posOpts.replace('value="'+pNow+'"','value="'+pNow+'" selected')}
+              </select>
+              <input class="plan-step-input" id="pipe_now_other" placeholder="Otro rol (opcional)..." value="${pNowOther}" style="margin-top:4px;${pNowOther?'display:block':'display:none'}">
+            </div>
+          </div>
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#3b82f6;color:#fff">2</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">A un movimiento</div>
+              <select class="plan-step-select" id="pipe_one" onchange="checkOther('pipe_one','pipe_one_other')">
+                ${posOpts.replace('value="'+pOne+'"','value="'+pOne+'" selected')}
+              </select>
+              <input class="plan-step-input" id="pipe_one_other" placeholder="Otro rol (opcional)..." value="${pOneOther}" style="margin-top:4px;${pOneOther?'display:block':'display:none'}">
+            </div>
+          </div>
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#93c5fd;color:#1d4ed8">3</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">A dos movimientos</div>
+              <select class="plan-step-select" id="pipe_two" onchange="checkOther('pipe_two','pipe_two_other')">
+                ${posOpts.replace('value="'+pTwo+'"','value="'+pTwo+'" selected')}
+              </select>
+              <input class="plan-step-input" id="pipe_two_other" placeholder="Otro rol (opcional)..." value="${pTwoOther}" style="margin-top:4px;${pTwoOther?'display:block':'display:none'}">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="plan-card plan-b">
+        <div class="plan-hdr">
+          <div class="sdot" style="background:#f59e0b"></div>
+          <h3 style="color:#a16207">Plan B · Movimiento alternativo</h3>
+        </div>
+        <div class="plan-body">
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#a16207;color:#fff">1</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">Ready Now</div>
+              <select class="plan-step-select" id="pipe_b_now" onchange="checkOther('pipe_b_now','pipe_b_now_other')">
+                ${posOpts.replace('value="'+pBNow+'"','value="'+pBNow+'" selected')}
+              </select>
+              <input class="plan-step-input" id="pipe_b_now_other" placeholder="Otro rol (opcional)..." value="${pBNowOther}" style="margin-top:4px;${pBNowOther?'display:block':'display:none'}">
+            </div>
+          </div>
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#f59e0b;color:#fff">2</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">A un movimiento</div>
+              <select class="plan-step-select" id="pipe_b_one" onchange="checkOther('pipe_b_one','pipe_b_one_other')">
+                ${posOpts.replace('value="'+pBOne+'"','value="'+pBOne+'" selected')}
+              </select>
+              <input class="plan-step-input" id="pipe_b_one_other" placeholder="Otro rol (opcional)..." value="${pBOneOther}" style="margin-top:4px;${pBOneOther?'display:block':'display:none'}">
+            </div>
+          </div>
+          <div class="plan-step">
+            <div class="plan-step-dot" style="background:#fde68a;color:#a16207">3</div>
+            <div class="plan-step-content">
+              <div class="plan-step-label">A dos movimientos</div>
+              <select class="plan-step-select" id="pipe_b_two" onchange="checkOther('pipe_b_two','pipe_b_two_other')">
+                ${posOpts.replace('value="'+pBTwo+'"','value="'+pBTwo+'" selected')}
+              </select>
+              <input class="plan-step-input" id="pipe_b_two_other" placeholder="Otro rol (opcional)..." value="${pBTwoOther}" style="margin-top:4px;${pBTwoOther?'display:block':'display:none'}">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RADAR + COMPORTAMIENTOS -->
+    ${buildRadarSection(hasPot)}
+
+    <!-- DESARROLLO -->
+    <div class="section">
+      <div class="section-hdr"><div class="sdot" style="background:#10b981"></div><h3>Plan de Desarrollo</h3></div>
+      <div class="section-body two-col">
+        <div><div class="field-lbl">Necesidades de desarrollo</div><textarea id="dev_needs" placeholder="Áreas de mejora identificadas...">${p.devNeeds}</textarea></div>
+        <div><div class="field-lbl">Acciones concretas</div><textarea id="dev_actions" placeholder="Acciones del período...">${p.devActions}</textarea></div>
+        <div><div class="field-lbl">Fortalezas clave</div><textarea id="key_strengths" placeholder="Principales fortalezas...">${p.keyStrengths}</textarea></div>
+        <div><div class="field-lbl">Aspiraciones</div><textarea id="aspirations" placeholder="¿Qué quiere lograr?">${p.aspirations}</textarea></div>
+      </div>
+    </div>
+
+    <!-- GESTIÓN -->
+    <div class="section">
+      <div class="section-hdr"><div class="sdot" style="background:#ec4899"></div><h3>Gestión del Talento</h3></div>
+      <div class="section-body two-col">
+        <div><div class="field-lbl">Riesgo de retención</div><select class="sf" id="retention_risk">${retOpts}</select></div>
+        <div><div class="field-lbl">Development designation</div><select class="sf" id="dev_designation">${devOpts}</select></div>
+        <div style="grid-column:1/-1"><div class="field-lbl">Consideraciones personales</div><textarea id="personal_notes" placeholder="Contexto personal relevante...">${p.personalNotes}</textarea></div>
+      </div>
+    </div>
+    <!-- CHECKLIST -->
+    <div class="section">
+      <div class="section-hdr"><div class="sdot" style="background:#6fcf5f"></div><h3>Acciones de Desarrollo</h3></div>
+      <div class="section-body">
+        <div class="checklist-wrap" id="checklistWrap"></div>
+        <button class="add-check-btn" style="margin-top:8px" onclick="addCheckItem()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar acción
+        </button>
+      </div>
+    </div>
+
+    <div class="save-row">
+      <button class="btn btn-ghost" id="exportCardBtn" onclick="exportFichaExcel('${p.nombre}')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar ficha
+      </button>
+      <button class="btn btn-primary" id="saveCardBtn" onclick="saveCard('${p.nombre}')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar ficha
+      </button>
+    </div>
+    <div class="save-note">Guardado en Supabase · disponible desde cualquier computador</div>
+  `;
+}
+
+// ── Checklist ────────────────────────────────────────────────────────────────
+let checkItems = [];
+
+function renderChecklist(){
+  const wrap = document.getElementById("checklistWrap");
+  if(!wrap) return;
+  if(!checkItems.length){
+    wrap.innerHTML = "<div style='font-size:11px;color:#94a3b8;padding:4px 0'>No hay acciones registradas aún.</div>";
+    return;
+  }
+  wrap.innerHTML = checkItems.map((item,idx) => {
+    const statusIcon = item.status==="done"?"✓":item.status==="inprogress"?"→":"";
+    return "<div class='check-item "+item.status+"' id='chk-"+idx+"'>"
+      +"<button class='check-status "+item.status+"' onclick='cycleStatus("+idx+")' title='Cambiar estado'>"+statusIcon+"</button>"
+      +"<input class='check-desc"+(item.status==="done"?" done":"")+"' value='"+item.desc.replace(/'/g,"&#39;")+"' placeholder='Descripción de la acción...' onchange='updateCheck("+idx+","desc",this.value)'>"
+      +"<input type='date' class='check-date' value='"+item.date+"' onchange='updateCheck("+idx+","date",this.value)' title='Fecha límite'>"
+      +"<button class='check-del' onclick='removeCheck("+idx+")' title='Eliminar'>×</button>"
+      +"</div>";
+  }).join("");
+}
+
+function cycleStatus(idx){
+  const states=["pending","inprogress","done"];
+  const curr=checkItems[idx].status||"pending";
+  const next=states[(states.indexOf(curr)+1)%states.length];
+  checkItems[idx].status=next;
+  renderChecklist();
+}
+
+function updateCheck(idx,field,val){
+  checkItems[idx][field]=val;
+}
+
+function addCheckItem(){
+  checkItems.push({desc:"",date:"",status:"pending"});
+  renderChecklist();
+  // Focus last input
+  setTimeout(()=>{
+    const inputs=document.querySelectorAll(".check-desc");
+    if(inputs.length) inputs[inputs.length-1].focus();
+  },50);
+}
+
+function removeCheck(idx){
+  checkItems.splice(idx,1);
+  renderChecklist();
+}
+
+function loadChecklist(p){
+  const f=FICHAS[p.nombre.toLowerCase()]||{};
+  try{
+    checkItems = f.acciones_desarrollo ? JSON.parse(f.acciones_desarrollo) : [];
+    if(!Array.isArray(checkItems)) checkItems=[];
+  }catch(e){checkItems=[];}
+  renderChecklist();
+}
+
+// ── Export individual ficha to Excel ─────────────────────────────────────────
+function exportFichaExcel(name){
+  const p=PARTNERS.map(merged).find(d=>d.nombre===name);
+  if(!p) return;
+  const tenure=TENURE_MAP[p.nombre]||"—";
+  const scores=[p.pot_score_1,p.pot_score_2,p.pot_score_3,p.pot_score_4,p.pot_score_5,p.pot_score_6,p.pot_score_7,p.pot_score_8];
+  const BEH_NAMES=["Iniciativa y liderazgo","Desarrollo de equipos","Orientación al feedback","Aprendizaje continuo","Pensamiento sistémico","Tolerancia a la ambigüedad","Capacidad de escucha","Habilidad comunicacional"];
+
+  const g=id=>document.getElementById(id)?.value||"";
+
+  const rows=[
+    ["FICHA DE DESARROLLO · NOTCO CONO SUR 2025","","",""],
+    ["","","",""],
+    ["DATOS PERSONALES","","",""],
+    ["Nombre",p.nombre,"Área",p.area||"—"],
+    ["Cargo",p.cargo||"—","Seniority",p.seniority||"—"],
+    ["Manager",p.manager||"—","Antigüedad",tenure],
+    ["Desempeño",p.desempeno||"—","Potencial",p.pot_avg!=null?Number(p.pot_avg).toFixed(2)+" ("+p.pot_class+")":"Sin datos"],
+    ["","","",""],
+    ["PIPELINE DE CARRERA","","",""],
+    ["","Plan A · Línea actual","","Plan B · Movimiento alternativo"],
+    ["Ready Now",g("pipe_now")||(p.pipelineNow||""),"",g("pipe_b_now")||(p.pipelineBNow||"")],
+    ["A un movimiento",g("pipe_one")||(p.pipelineOne||""),"",g("pipe_b_one")||(p.pipelineBOne||"")],
+    ["A dos movimientos",g("pipe_two")||(p.pipelineTwo||""),"",g("pipe_b_two")||(p.pipelineBTwo||"")],
+    ["","","",""],
+    ["EVALUACIÓN DE POTENCIAL","","",""],
+    ["Competencia","Score","",""],
+    ...BEH_NAMES.map((b,i)=>[b,scores[i]!=null?scores[i]:"—","",""]),
+    ["PROMEDIO TOTAL",p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"—","Clasificación",p.pot_class||"—"],
+    ["","","",""],
+    ["PLAN DE DESARROLLO","","",""],
+    ["Necesidades de desarrollo",g("dev_needs")||(p.devNeeds||""),"",""],
+    ["Acciones concretas",g("dev_actions")||(p.devActions||""),"",""],
+    ["Fortalezas clave",g("key_strengths")||(p.keyStrengths||""),"",""],
+    ["Aspiraciones",g("aspirations")||(p.aspirations||""),"",""],
+    ["","","",""],
+    ["ACCIONES DE DESARROLLO","","",""],
+    ["Acción","Fecha límite","Estado",""],
+    ...checkItems.map(a=>[a.desc,a.date,a.status==="done"?"Completado":a.status==="inprogress"?"En proceso":"Pendiente",""]),
+    ["","","",""],
+    ["GESTIÓN DEL TALENTO","","",""],
+    ["Riesgo de retención",g("retention_risk")||(p.retentionRisk||""),"Development designation",g("dev_designation")||(p.devDesig||"")],
+    ["Consideraciones personales",g("personal_notes")||(p.personalNotes||""),"",""],
+  ];
+
+  const csv=rows.map(r=>r.map(v=>"""+String(v||"").replace(/"/g,"""")+""").join(",")).join("
+");
+  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="Ficha_"+p.nombre.replace(/\s+/g,"_")+"_2025.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function checkOther(selectId, inputId){
+  const sel=document.getElementById(selectId);
+  const inp=document.getElementById(inputId);
+  if(!sel||!inp) return;
+  inp.style.display = sel.value ? "block" : "none";
+}
+
+function drawRadar(scores){
+  const canvas=document.getElementById("radarChart");
+  if(!canvas) return;
+  const ctx=canvas.getContext("2d");
+  const W=190,H=190,cx=W/2,cy=H/2,R=72;
+  ctx.clearRect(0,0,W,H);
+  const labels=["Iniciativa","Des. Equipos","Feedback","Aprendizaje","P. Sistémico","Ambigüedad","Escucha","Comunic."];
+  const colors=["#3b82f6","#3b82f6","#8b5cf6","#8b5cf6","#f59e0b","#f59e0b","#10b981","#10b981"];
+  const n=8;
+  const angle=(i)=>(-Math.PI/2)+(2*Math.PI/n)*i;
+
+  // Grid circles
+  [1,2,3].forEach(level=>{
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      const r=R*(level/3);
+      const x=cx+r*Math.cos(angle(i));
+      const y=cy+r*Math.sin(angle(i));
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle=level===3?"#e2e8f0":"#f1f5f9";
+    ctx.lineWidth=1;
+    ctx.stroke();
+  });
+
+  // Axes
+  for(let i=0;i<n;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+R*Math.cos(angle(i)),cy+R*Math.sin(angle(i)));
+    ctx.strokeStyle="#f1f5f9";ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // Data polygon
+  const vals=scores.map(s=>s!=null?s:0);
+  ctx.beginPath();
+  vals.forEach((v,i)=>{
+    const r=R*(v/3);
+    const x=cx+r*Math.cos(angle(i));
+    const y=cy+r*Math.sin(angle(i));
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.closePath();
+  ctx.fillStyle="rgba(111,207,95,0.15)";ctx.fill();
+  ctx.strokeStyle="#6fcf5f";ctx.lineWidth=2;ctx.stroke();
+
+  // Dots
+  vals.forEach((v,i)=>{
+    if(v===0) return;
+    const r=R*(v/3);
+    const x=cx+r*Math.cos(angle(i));
+    const y=cy+r*Math.sin(angle(i));
+    ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);
+    ctx.fillStyle=colors[i];ctx.fill();
+    ctx.strokeStyle="#fff";ctx.lineWidth=1.5;ctx.stroke();
+  });
+
+  // Labels
+  ctx.font="bold 8px 'Segoe UI',sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  labels.forEach((lbl,i)=>{
+    const r=R+14;
+    const x=cx+r*Math.cos(angle(i));
+    const y=cy+r*Math.sin(angle(i));
+    ctx.fillStyle="#94a3b8";
+    ctx.fillText(lbl,x,y);
+  });
+}
+
+async function saveCard(name){
+  const btn=document.getElementById("saveCardBtn");if(btn)btn.disabled=true;
+  setSyncPill("saving");
+  const g=id=>document.getElementById(id)?.value||"";
+  try{
+    const data={
+      nombre:name,
+      acciones_desarrollo:JSON.stringify(checkItems),
+      pipeline_now:g("pipe_now"), pipeline_now_other:g("pipe_now_other"),
+      pipeline_one:g("pipe_one"), pipeline_one_other:g("pipe_one_other"),
+      pipeline_two:g("pipe_two"), pipeline_two_other:g("pipe_two_other"),
+      pipeline_b_now:g("pipe_b_now"), pipeline_b_now_other:g("pipe_b_now_other"),
+      pipeline_b_one:g("pipe_b_one"), pipeline_b_one_other:g("pipe_b_one_other"),
+      pipeline_b_two:g("pipe_b_two"), pipeline_b_two_other:g("pipe_b_two_other"),
+      dev_needs:g("dev_needs"), dev_actions:g("dev_actions"),
+      key_strengths:g("key_strengths"), aspirations:g("aspirations"),
+      personal_notes:g("personal_notes"), retention_risk:g("retention_risk"),
+      dev_designation:g("dev_designation"), updated_at:new Date().toISOString()
+    };
+    await sbUpsert("fichas_carrera",data);
+    data.acciones_desarrollo=JSON.stringify(checkItems);
+    FICHAS[name.toLowerCase()]={...data};
+    renderFichasTable();setSyncPill("ok");
+  }catch(e){setSyncPill("err");}
+  if(btn)btn.disabled=false;
+}
+
+function renderTable(){
+  const data=getFiltered("areaFilter2","searchInput","perfFilter");
+  const pc=d=>d.desempeno==="Role Model"?"pb pb-rm":d.desempeno==="Alineado"?"pb pb-al":d.desempeno==="Desalineado"?"pb pb-des":"pb pb-ne";
+  document.getElementById("adminBody").innerHTML=data.map(p=>`<tr>
+    <td style="font-weight:600">${p.nombre}</td>
+    <td style="color:#64748b">${p.area||"—"}</td>
+    <td style="color:#64748b;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.cargo||""}">${p.cargo||"—"}</td>
+    <td><span class="${pc(p)}">${p.desempeno||"—"}</span></td>
+    <td style="color:#64748b">${p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"—"}${p.pot_class?` <span style="font-size:10px;color:#94a3b8">(${p.pot_class})</span>`:""}</td>
+    <td>${(p.talent||"").includes("Key Talent")?'<span class="kt-sm">⭐ Key Talent</span>':"—"}</td>
+    <td><button class="btn btn-ghost" style="font-size:10px;padding:4px 9px" onclick="openEditModal('${p.id}')">Editar</button></td>
+  </tr>`).join("");
+}
+
+function openAddModal(){editingId=null;document.getElementById("modalTitle").textContent="Agregar partner";document.getElementById("modalBody").innerHTML=modalFields({});document.getElementById("modalOverlay").classList.add("open");}
+function openEditModal(id){const p=PARTNERS.find(p=>p.id===id);if(!p)return;editingId=id;document.getElementById("modalTitle").textContent="Editar partner";document.getElementById("modalBody").innerHTML=modalFields(p);document.getElementById("modalOverlay").classList.add("open");}
+
+function modalFields(p){
+  const perfOpts=["Alineado","Role Model","Desalineado","No Evaluado"].map(v=>`<option value="${v}"${p.desempeno===v?" selected":""}>${v}</option>`).join("");
+  return`
+    <div class="mf full"><label>Nombre completo</label><input id="mf_nombre" value="${p.nombre||""}" placeholder="Nombre completo"></div>
+    <div class="mf"><label>Área / Gerencia</label><input id="mf_area" value="${p.area||""}" placeholder="Ej: Operaciones"></div>
+    <div class="mf"><label>Seniority</label><input id="mf_seniority" value="${p.seniority||""}" placeholder="Ej: Sr Analyst"></div>
+    <div class="mf full"><label>Cargo</label><input id="mf_cargo" value="${p.cargo||""}" placeholder="Ej: Supply Chain Analyst"></div>
+    <div class="mf"><label>Manager</label><input id="mf_manager" value="${p.manager||""}" placeholder="Nombre del manager"></div>
+    <div class="mf"><label>Desempeño calibrado</label><select id="mf_desempeno"><option value="">Seleccionar</option>${perfOpts}</select></div>
+    <div class="mf"><label>Talent tag</label><div style="font-size:11px;color:#94a3b8;padding:7px 10px;border:1px solid #f1f5f9;border-radius:7px;background:#f8fafc">${p.talent||"Se calcula automáticamente"}</div><input type="hidden" id="mf_talent" value="${p.talent||""}"></div>
+    <div class="mf"><label>Potencial total (0-3)</label><input id="mf_pot_avg" type="number" min="0" max="3" step="0.01" value="${p.pot_avg!=null?p.pot_avg:""}" placeholder="Ej: 2.50"></div>
+    <div class="mf full"><label>Clasificación potencial</label><select id="mf_pot_class"><option value="">Sin datos</option><option${p.pot_class==="Alto"?" selected":""}>Alto</option><option${p.pot_class==="Medio"?" selected":""}>Medio</option><option${p.pot_class==="Bajo"?" selected":""}>Bajo</option></select></div>
+  `;
+}
+
+function closeModal(){document.getElementById("modalOverlay").classList.remove("open");editingId=null;}
+
+async function saveModal(){
+  const g=id=>document.getElementById(id)?.value||"";
+  const nombre=g("mf_nombre").trim();if(!nombre){alert("El nombre es obligatorio");return;}
+  setSyncPill("saving");
+  try{
+    const data={nombre,area:g("mf_area"),seniority:g("mf_seniority"),cargo:g("mf_cargo"),manager:g("mf_manager"),desempeno:g("mf_desempeno"),talent:g("mf_talent"),pot_avg:g("mf_pot_avg")!=""?parseFloat(g("mf_pot_avg")):null,pot_class:g("mf_pot_class"),updated_at:new Date().toISOString()};
+    if(editingId)data.id=editingId;
+    await sbUpsert("partners",data);
+    closeModal();await reloadData();
+  }catch(e){setSyncPill("err");alert("Error al guardar: "+e.message);}
+}
+
+document.getElementById("modalOverlay").addEventListener("click",e=>{if(e.target===document.getElementById("modalOverlay"))closeModal();});
+
+function switchView(id,btn){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("view-"+id).classList.add("active");
+  btn.classList.add("active");
+}
+
+loadAll();
+</script>
+</body>
+</html>
