@@ -269,7 +269,6 @@ tr:hover td{background:#f8fafc}
         <div class="grid-header"><h2>Nine-Box Grid</h2><p id="gridSubtitle"></p></div>
         <div class="legend">
           <div class="leg-item"><div class="leg-dot" style="background:#166534;border:2px solid #f59e0b"></div>Key Talent</div>
-          <div class="leg-item"><div class="leg-dot" style="background:#1d4ed8"></div>High Potential</div>
           <div class="leg-item"><div class="leg-dot" style="background:#6d28d9"></div>Talent</div>
           <div class="leg-item"><div class="leg-dot" style="background:#475569"></div>Evaluado sin tag</div>
           <div class="leg-item"><div class="leg-dot"></div>Sin evaluación</div>
@@ -749,7 +748,7 @@ async function savePotencial(){
   function calcTalentTag(potClass, desempeno){
     if(!potClass || potClass==="Sin datos" || potClass==="Bajo") return "";
     if(potClass==="Alto" && desempeno==="Role Model") return "Key Talent";
-    if(potClass==="Alto" && desempeno==="Alineado") return "High Potential";
+    if(potClass==="Alto" && desempeno==="Alineado") return "Talent";
     if(potClass==="Medio" && desempeno==="Role Model") return "Talent";
     return "";
   }
@@ -807,7 +806,7 @@ async function reloadData(){
 
 function merged(p){
   const f=FICHAS[p.nombre.toLowerCase()]||{};
-  const potY=p.pot_avg!=null?(p.pot_avg>=2.5?3:p.pot_avg>=1.5?2:1):((p.talent||"").toLowerCase().includes("key talent")?3:2);
+  const potY=p.pot_avg!=null?(p.pot_avg>=2.5?3:p.pot_avg>=1.5?2:1):((p.talent==="Key Talent"||p.talent==="Talent")?3:2);
   return {...p,potY,pipelineNow:f.pipeline_now||"",pipelineOne:f.pipeline_one||"",pipelineTwo:f.pipeline_two||"",devNeeds:f.dev_needs||"",devActions:f.dev_actions||"",keyStrengths:f.key_strengths||"",aspirations:f.aspirations||"",personalNotes:f.personal_notes||"",retentionRisk:f.retention_risk||"",devDesig:f.dev_designation||""};
 }
 
@@ -845,9 +844,8 @@ function renderGrid(){
         const d=document.createElement("div");
         const hasEval=p.pot_avg!==null&&p.pot_avg!==undefined;
         const isKT=p.talent==="Key Talent";
-        const isHP=p.talent==="High Potential";
         const isT=p.talent==="Talent";
-        const dotBg=isKT?"#166534":isHP?"#1d4ed8":isT?"#6d28d9":hasEval?"#475569":gc(p.nombre);
+        const dotBg=isKT?"#166534":isT?"#6d28d9":hasEval?"#475569":gc(p.nombre);
         d.className="dot"+(isKT?" kt":"")+(activeName===p.nombre?" active":"")+(hasEval?" evaluated":"");
         d.style.background=dotBg;
         const tagLabel=p.talent?(" · "+p.talent):"";
@@ -861,9 +859,8 @@ function renderGrid(){
   });
   const tt=(byCell["3-3"]||[]).length,kt=placed.filter(p=>(p.talent||"").toLowerCase().includes("key talent")).length;
   const rm=placed.filter(p=>p.desempeno==="Role Model").length,des=placed.filter(p=>p.desempeno==="Desalineado").length;
-  const hp=placed.filter(p=>p.talent==="High Potential").length;
   const tl=placed.filter(p=>p.talent==="Talent").length;
-  document.getElementById("stats").innerHTML=[{l:"Key Talent",v:tt,c:"#166534"},{l:"High Potential",v:hp,c:"#1d4ed8"},{l:"Talent",v:tl,c:"#6d28d9"},{l:"Desalineados",v:des,c:"#dc2626"}].map(s=>`<div class="stat" style="border-left-color:${s.c}"><div class="stat-n" style="color:${s.c}">${s.v}</div><div class="stat-l">${s.l}</div></div>`).join("");
+  document.getElementById("stats").innerHTML=[{l:"Key Talent",v:tt,c:"#166534"},{l:"Talent",v:tl,c:"#6d28d9"},{l:"Role Models",v:rm,c:"#15803d"},{l:"Desalineados",v:des,c:"#dc2626"}].map(s=>`<div class="stat" style="border-left-color:${s.c}"><div class="stat-n" style="color:${s.c}">${s.v}</div><div class="stat-l">${s.l}</div></div>`).join("");
 }
 
 function selectPerson(name,cellKey){
@@ -1350,7 +1347,7 @@ const TENURE_MAP = {
 };
 
 function renderCard(p,cellKey){
-  const m=CM[cellKey],isKT=(p.talent||"").toLowerCase().includes("key talent");
+  const m=CM[cellKey],isKT=p.talent==="Key Talent",isT=p.talent==="Talent";
   const potDisp=p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"—";
   const scores=[p.pot_score_1,p.pot_score_2,p.pot_score_3,p.pot_score_4,p.pot_score_5,p.pot_score_6,p.pot_score_7,p.pot_score_8];
   const hasPot=scores.some(s=>s!=null);
@@ -1387,7 +1384,7 @@ function renderCard(p,cellKey){
             <div class="card-hbadges">
               <span class="card-hbadge" style="background:${m.bg};color:${m.ac}">${m.l}</span>
               <span class="card-hbadge" style="background:${perfColor};color:${perfTColor}">${p.desempeno||"—"}</span>
-              ${isKT?'<span class="card-hbadge" style="background:#fef9c3;color:#92400e">⭐ Key Talent</span>':""}
+              ${isKT?'<span class="card-hbadge" style="background:#fef9c3;color:#92400e">⭐ Key Talent</span>':isT?'<span class="card-hbadge" style="background:#f5f3ff;color:#6d28d9">🌟 Talent</span>':""}
             </div>
           </div>
         </div>
@@ -1637,7 +1634,7 @@ function exportFichaExcel(name){
   ];
 
   const csv=rows.map(r=>r.map(v=>'"'+String(v||"").replace(/"/g,'""')+'"').join(",")).join("\n");
-  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"});
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
   a.href=url;
