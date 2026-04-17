@@ -554,7 +554,7 @@ function exportFichas(){
     rows.push([f.nombre,p.area||"",p.seniority||"",p.cargo||"",p.desempeno||"",p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"",p.pot_class||"",f.pipeline_now||"",f.pipeline_one||"",f.pipeline_two||"",f.dev_needs||"",f.dev_actions||"",f.key_strengths||"",f.aspirations||"",f.retention_risk||"",f.dev_designation||"",f.personal_notes||"",f.updated_at||""]);
   });
   // Build CSV
-  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||"").replace(/"/g,'""')+'"').join(",")).join("\n");
   const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");a.href=url;a.download="FichasCarrera_NotCo_2025.csv";a.click();
@@ -1636,7 +1636,7 @@ function exportFichaExcel(name){
     ["Consideraciones personales",g("personal_notes")||(p.personalNotes||""),"",""],
   ];
 
-  const csv=rows.map(r=>r.map(v=>"""+String(v||"").replace(/"/g,"""")+""").join(",")).join("
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||"").replace(/"/g,'""')+'"').join(",")).join("\n");
 ");
   const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"});
   const url=URL.createObjectURL(blob);
