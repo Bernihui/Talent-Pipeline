@@ -1548,8 +1548,8 @@ function renderChecklist(){
     const statusIcon = item.status==="done"?"✓":item.status==="inprogress"?"→":"";
     return "<div class='check-item "+item.status+"' id='chk-"+idx+"'>"
       +"<button class='check-status "+item.status+"' onclick='cycleStatus("+idx+")' title='Cambiar estado'>"+statusIcon+"</button>"
-      +"<input class='check-desc"+(item.status==="done"?" done":"")+"' value='"+item.desc.replace(/'/g,"&#39;")+"' placeholder='Descripción de la acción...' onchange='updateCheck("+idx+","desc",this.value)'>"
-      +"<input type='date' class='check-date' value='"+item.date+"' onchange='updateCheck("+idx+","date",this.value)' title='Fecha límite'>"
+      +"<input class='check-desc"+(item.status==="done"?" done":"")+"' value='"+item.desc.replace(/'/g,"&#39;")+"' placeholder='Descripcion de la accion...' onchange=\"updateCheck("+idx+",'desc',this.value)\">"
+      +"<input type='date' class='check-date' value='"+item.date+"' onchange=\"updateCheck("+idx+",'date',this.value)\" title='Fecha limite'>"  
       +"<button class='check-del' onclick='removeCheck("+idx+")' title='Eliminar'>×</button>"
       +"</div>";
   }).join("");
