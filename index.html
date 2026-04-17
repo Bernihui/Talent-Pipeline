@@ -102,8 +102,24 @@ select.sf:focus{outline:none;border-color:#6fcf5f}
 .comp-bar{flex:1;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden}
 .comp-fill{height:100%;border-radius:3px}
 .comp-val{font-size:11px;font-weight:700;min-width:24px;text-align:right}
-.save-row{display:flex;align-items:center;justify-content:flex-end;margin-top:12px}
+.save-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:12px}
 .save-note{font-size:10px;color:#94a3b8;margin-top:5px;text-align:right}
+/* Checklist */
+.checklist-wrap{display:flex;flex-direction:column;gap:6px}
+.check-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;transition:all .15s}
+.check-item.done{background:#f0fdf4;border-color:#86efac}
+.check-item.inprogress{background:#eff6ff;border-color:#93c5fd}
+.check-status{width:22px;height:22px;border-radius:50%;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:10px;transition:all .15s}
+.check-status.done{background:#15803d;border-color:#15803d;color:#fff}
+.check-status.inprogress{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.check-desc{flex:1;font-size:11px;color:#1e293b;border:none;outline:none;background:transparent;font-family:inherit}
+.check-desc.done{text-decoration:line-through;color:#94a3b8}
+.check-date{font-size:10px;color:#94a3b8;border:1px solid #e2e8f0;border-radius:5px;padding:3px 6px;background:#f8fafc;font-family:inherit;cursor:pointer}
+.check-date:focus{outline:none;border-color:#6fcf5f}
+.check-del{width:20px;height:20px;border-radius:50%;background:none;border:none;color:#cbd5e1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;padding:0}
+.check-del:hover{color:#dc2626;background:#fee2e2}
+.add-check-btn{display:flex;align-items:center;gap:6px;font-size:11px;color:#6fcf5f;background:none;border:1px dashed #6fcf5f;border-radius:7px;padding:6px 12px;cursor:pointer;font-family:inherit;transition:all .15s;width:100%}
+.add-check-btn:hover{background:#f0fdf4}
 /* New card design */
 .card-header{background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);border-radius:12px;padding:18px;margin-bottom:10px;color:#fff}
 .card-header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px}
@@ -252,9 +268,11 @@ tr:hover td{background:#f8fafc}
         </div>
         <div class="grid-header"><h2>Nine-Box Grid</h2><p id="gridSubtitle"></p></div>
         <div class="legend">
-          <div class="leg-item"><div class="leg-dot" style="border:2px solid #f59e0b"></div>Key Talent</div>
-          <div class="leg-item"><div class="leg-dot"></div>Click → ficha de carrera</div>
-          <div class="leg-item"><div class="leg-dot" style="background:#6fcf5f;border:2px solid #166534"></div>Potencial evaluado</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#166534;border:2px solid #f59e0b"></div>Key Talent</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#1d4ed8"></div>High Potential</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#6d28d9"></div>Talent</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#475569"></div>Evaluado sin tag</div>
+          <div class="leg-item"><div class="leg-dot"></div>Sin evaluación</div>
         </div>
         <div class="grid-wrap">
           <div class="y-axis"><span class="y-lbl">Potencial ↑</span></div>
@@ -727,6 +745,17 @@ async function savePotencial(){
   const total=validAvgs.length?validAvgs.reduce((a,b)=>a+b,0)/validAvgs.length:null;
   const cls=total!=null?(total>=2.5?"Alto":total>=1.5?"Medio":"Bajo"):null;
 
+  // Auto-calculate talent tag based on potencial + desempeno
+  function calcTalentTag(potClass, desempeno){
+    if(!potClass || potClass==="Sin datos" || potClass==="Bajo") return "";
+    if(potClass==="Alto" && desempeno==="Role Model") return "Key Talent";
+    if(potClass==="Alto" && desempeno==="Alineado") return "High Potential";
+    if(potClass==="Medio" && desempeno==="Role Model") return "Talent";
+    return "";
+  }
+  const desempeno = potCurrentPerson.desempeno||"";
+  const autoTag = calcTalentTag(cls, desempeno);
+
   try{
     await sbUpsert("partners",{
       id: potCurrentPerson.id,
@@ -736,16 +765,18 @@ async function savePotencial(){
       pot_score_5:potScores.s5, pot_score_6:potScores.s6,
       pot_score_7:potScores.s7, pot_score_8:potScores.s8,
       pot_avg:total, pot_class:cls,
+      talent:autoTag,
       updated_at:new Date().toISOString()
     });
     // Update local cache
     const idx=PARTNERS.findIndex(p=>p.nombre===potCurrentPerson.nombre);
     if(idx>=0){
-      PARTNERS[idx]={...PARTNERS[idx],pot_score_1:potScores.s1,pot_score_2:potScores.s2,pot_score_3:potScores.s3,pot_score_4:potScores.s4,pot_score_5:potScores.s5,pot_score_6:potScores.s6,pot_score_7:potScores.s7,pot_score_8:potScores.s8,pot_avg:total,pot_class:cls};
+      PARTNERS[idx]={...PARTNERS[idx],pot_score_1:potScores.s1,pot_score_2:potScores.s2,pot_score_3:potScores.s3,pot_score_4:potScores.s4,pot_score_5:potScores.s5,pot_score_6:potScores.s6,pot_score_7:potScores.s7,pot_score_8:potScores.s8,pot_avg:total,pot_class:cls,talent:autoTag};
       potCurrentPerson=PARTNERS[idx];
     }
-    renderGrid(); // refresh ninebox
-    buildPotSelect(); // refresh checkmarks
+    renderGrid();
+    renderTable();
+    buildPotSelect();
     setSyncPill("ok");
   }catch(e){setSyncPill("err");}
   if(btn)btn.disabled=false;
@@ -811,11 +842,16 @@ function renderGrid(){
       row.appendChild(cell);
       const dw=cell.querySelector(`#dw-${k}`);
       ppl.forEach(p=>{
-        const d=document.createElement("div");const isKT=(p.talent||"").toLowerCase().includes("key talent");
+        const d=document.createElement("div");
         const hasEval=p.pot_avg!==null&&p.pot_avg!==undefined;
+        const isKT=p.talent==="Key Talent";
+        const isHP=p.talent==="High Potential";
+        const isT=p.talent==="Talent";
+        const dotBg=isKT?"#166534":isHP?"#1d4ed8":isT?"#6d28d9":hasEval?"#475569":gc(p.nombre);
         d.className="dot"+(isKT?" kt":"")+(activeName===p.nombre?" active":"")+(hasEval?" evaluated":"");
-        d.style.background=hasEval?"#166534":gc(p.nombre);
-        d.title=p.nombre+(hasEval?` · Potencial: ${Number(p.pot_avg).toFixed(2)} (${p.pot_class})`:" · Sin evaluación");
+        d.style.background=dotBg;
+        const tagLabel=p.talent?(" · "+p.talent):"";
+        d.title=p.nombre+(hasEval?` · Potencial: ${Number(p.pot_avg).toFixed(2)} (${p.pot_class})`:" · Sin evaluación")+tagLabel;
         d.textContent=ini(p.nombre);
         d.addEventListener("click",()=>selectPerson(p.nombre,k));dw.appendChild(d);
       });
@@ -825,7 +861,9 @@ function renderGrid(){
   });
   const tt=(byCell["3-3"]||[]).length,kt=placed.filter(p=>(p.talent||"").toLowerCase().includes("key talent")).length;
   const rm=placed.filter(p=>p.desempeno==="Role Model").length,des=placed.filter(p=>p.desempeno==="Desalineado").length;
-  document.getElementById("stats").innerHTML=[{l:"Top Talent",v:tt,c:"#15803d"},{l:"Key Talents",v:kt,c:"#a16207"},{l:"Role Models",v:rm,c:"#6d28d9"},{l:"Desalineados",v:des,c:"#dc2626"}].map(s=>`<div class="stat" style="border-left-color:${s.c}"><div class="stat-n" style="color:${s.c}">${s.v}</div><div class="stat-l">${s.l}</div></div>`).join("");
+  const hp=placed.filter(p=>p.talent==="High Potential").length;
+  const tl=placed.filter(p=>p.talent==="Talent").length;
+  document.getElementById("stats").innerHTML=[{l:"Key Talent",v:tt,c:"#166534"},{l:"High Potential",v:hp,c:"#1d4ed8"},{l:"Talent",v:tl,c:"#6d28d9"},{l:"Desalineados",v:des,c:"#dc2626"}].map(s=>`<div class="stat" style="border-left-color:${s.c}"><div class="stat-n" style="color:${s.c}">${s.v}</div><div class="stat-l">${s.l}</div></div>`).join("");
 }
 
 function selectPerson(name,cellKey){
@@ -833,14 +871,30 @@ function selectPerson(name,cellKey){
   const p=PARTNERS.map(merged).find(d=>d.nombre===name);
   if(p){
     renderCard(p,cellKey);
-    // Draw radar after DOM is ready
+    loadChecklist(p);
     setTimeout(()=>{
       const scores=[p.pot_score_1,p.pot_score_2,p.pot_score_3,p.pot_score_4,p.pot_score_5,p.pot_score_6,p.pot_score_7,p.pot_score_8];
-      if(scores.some(s=>s!=null)) drawRadar(scores);
+      const hasPot=scores.some(s=>s!=null);
+      if(hasPot){
+        drawRadar(scores);
+        const el=document.getElementById("behDetailList");
+        if(el) el.innerHTML=buildBehDetailList(scores);
+      }
     },50);
   }
 }
 
+
+// ── Helper: build radar section HTML ─────────────────────────────────────────
+function buildRadarSection(hasPot){
+  if(!hasPot) return "";
+  return "<div class='radar-section'>"
+    +"<div class='section-hdr'><div class='sdot' style='background:#f59e0b'></div><h3>Mapa de Potencial</h3></div>"
+    +"<div class='radar-body'>"
+    +"<div class='radar-canvas-wrap'><canvas id='radarChart' width='190' height='190'></canvas></div>"
+    +"<div class='beh-detail-list' id='behDetailList'></div>"
+    +"</div></div>";
+}
 
 // ── Helper: build beh detail list HTML ───────────────────────────────────────
 function buildBehDetailList(scores){
@@ -1432,18 +1486,7 @@ function renderCard(p,cellKey){
     </div>
 
     <!-- RADAR + COMPORTAMIENTOS -->
-    ${hasPot?`
-    <div class="radar-section">
-      <div class="section-hdr"><div class="sdot" style="background:#f59e0b"></div><h3>Mapa de Potencial</h3></div>
-      <div class="radar-body">
-        <div class="radar-canvas-wrap">
-          <canvas id="radarChart" width="190" height="190"></canvas>
-        </div>
-        <div class="beh-detail-list">
-          ${buildBehDetailList(scores)}
-        </div>
-      </div>
-    </div>`:""}
+    ${buildRadarSection(hasPot)}
 
     <!-- DESARROLLO -->
     <div class="section">
@@ -1465,7 +1508,23 @@ function renderCard(p,cellKey){
         <div style="grid-column:1/-1"><div class="field-lbl">Consideraciones personales</div><textarea id="personal_notes" placeholder="Contexto personal relevante...">${p.personalNotes}</textarea></div>
       </div>
     </div>
+    <!-- CHECKLIST -->
+    <div class="section">
+      <div class="section-hdr"><div class="sdot" style="background:#6fcf5f"></div><h3>Acciones de Desarrollo</h3></div>
+      <div class="section-body">
+        <div class="checklist-wrap" id="checklistWrap"></div>
+        <button class="add-check-btn" style="margin-top:8px" onclick="addCheckItem()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar acción
+        </button>
+      </div>
+    </div>
+
     <div class="save-row">
+      <button class="btn btn-ghost" id="exportCardBtn" onclick="exportFichaExcel('${p.nombre}')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar ficha
+      </button>
       <button class="btn btn-primary" id="saveCardBtn" onclick="saveCard('${p.nombre}')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Guardar ficha
@@ -1473,6 +1532,119 @@ function renderCard(p,cellKey){
     </div>
     <div class="save-note">Guardado en Supabase · disponible desde cualquier computador</div>
   `;
+}
+
+// ── Checklist ────────────────────────────────────────────────────────────────
+let checkItems = [];
+
+function renderChecklist(){
+  const wrap = document.getElementById("checklistWrap");
+  if(!wrap) return;
+  if(!checkItems.length){
+    wrap.innerHTML = "<div style='font-size:11px;color:#94a3b8;padding:4px 0'>No hay acciones registradas aún.</div>";
+    return;
+  }
+  wrap.innerHTML = checkItems.map((item,idx) => {
+    const statusIcon = item.status==="done"?"✓":item.status==="inprogress"?"→":"";
+    return "<div class='check-item "+item.status+"' id='chk-"+idx+"'>"
+      +"<button class='check-status "+item.status+"' onclick='cycleStatus("+idx+")' title='Cambiar estado'>"+statusIcon+"</button>"
+      +"<input class='check-desc"+(item.status==="done"?" done":"")+"' value='"+item.desc.replace(/'/g,"&#39;")+"' placeholder='Descripción de la acción...' onchange='updateCheck("+idx+","desc",this.value)'>"
+      +"<input type='date' class='check-date' value='"+item.date+"' onchange='updateCheck("+idx+","date",this.value)' title='Fecha límite'>"
+      +"<button class='check-del' onclick='removeCheck("+idx+")' title='Eliminar'>×</button>"
+      +"</div>";
+  }).join("");
+}
+
+function cycleStatus(idx){
+  const states=["pending","inprogress","done"];
+  const curr=checkItems[idx].status||"pending";
+  const next=states[(states.indexOf(curr)+1)%states.length];
+  checkItems[idx].status=next;
+  renderChecklist();
+}
+
+function updateCheck(idx,field,val){
+  checkItems[idx][field]=val;
+}
+
+function addCheckItem(){
+  checkItems.push({desc:"",date:"",status:"pending"});
+  renderChecklist();
+  // Focus last input
+  setTimeout(()=>{
+    const inputs=document.querySelectorAll(".check-desc");
+    if(inputs.length) inputs[inputs.length-1].focus();
+  },50);
+}
+
+function removeCheck(idx){
+  checkItems.splice(idx,1);
+  renderChecklist();
+}
+
+function loadChecklist(p){
+  const f=FICHAS[p.nombre.toLowerCase()]||{};
+  try{
+    checkItems = f.acciones_desarrollo ? JSON.parse(f.acciones_desarrollo) : [];
+    if(!Array.isArray(checkItems)) checkItems=[];
+  }catch(e){checkItems=[];}
+  renderChecklist();
+}
+
+// ── Export individual ficha to Excel ─────────────────────────────────────────
+function exportFichaExcel(name){
+  const p=PARTNERS.map(merged).find(d=>d.nombre===name);
+  if(!p) return;
+  const tenure=TENURE_MAP[p.nombre]||"—";
+  const scores=[p.pot_score_1,p.pot_score_2,p.pot_score_3,p.pot_score_4,p.pot_score_5,p.pot_score_6,p.pot_score_7,p.pot_score_8];
+  const BEH_NAMES=["Iniciativa y liderazgo","Desarrollo de equipos","Orientación al feedback","Aprendizaje continuo","Pensamiento sistémico","Tolerancia a la ambigüedad","Capacidad de escucha","Habilidad comunicacional"];
+
+  const g=id=>document.getElementById(id)?.value||"";
+
+  const rows=[
+    ["FICHA DE DESARROLLO · NOTCO CONO SUR 2025","","",""],
+    ["","","",""],
+    ["DATOS PERSONALES","","",""],
+    ["Nombre",p.nombre,"Área",p.area||"—"],
+    ["Cargo",p.cargo||"—","Seniority",p.seniority||"—"],
+    ["Manager",p.manager||"—","Antigüedad",tenure],
+    ["Desempeño",p.desempeno||"—","Potencial",p.pot_avg!=null?Number(p.pot_avg).toFixed(2)+" ("+p.pot_class+")":"Sin datos"],
+    ["","","",""],
+    ["PIPELINE DE CARRERA","","",""],
+    ["","Plan A · Línea actual","","Plan B · Movimiento alternativo"],
+    ["Ready Now",g("pipe_now")||(p.pipelineNow||""),"",g("pipe_b_now")||(p.pipelineBNow||"")],
+    ["A un movimiento",g("pipe_one")||(p.pipelineOne||""),"",g("pipe_b_one")||(p.pipelineBOne||"")],
+    ["A dos movimientos",g("pipe_two")||(p.pipelineTwo||""),"",g("pipe_b_two")||(p.pipelineBTwo||"")],
+    ["","","",""],
+    ["EVALUACIÓN DE POTENCIAL","","",""],
+    ["Competencia","Score","",""],
+    ...BEH_NAMES.map((b,i)=>[b,scores[i]!=null?scores[i]:"—","",""]),
+    ["PROMEDIO TOTAL",p.pot_avg!=null?Number(p.pot_avg).toFixed(2):"—","Clasificación",p.pot_class||"—"],
+    ["","","",""],
+    ["PLAN DE DESARROLLO","","",""],
+    ["Necesidades de desarrollo",g("dev_needs")||(p.devNeeds||""),"",""],
+    ["Acciones concretas",g("dev_actions")||(p.devActions||""),"",""],
+    ["Fortalezas clave",g("key_strengths")||(p.keyStrengths||""),"",""],
+    ["Aspiraciones",g("aspirations")||(p.aspirations||""),"",""],
+    ["","","",""],
+    ["ACCIONES DE DESARROLLO","","",""],
+    ["Acción","Fecha límite","Estado",""],
+    ...checkItems.map(a=>[a.desc,a.date,a.status==="done"?"Completado":a.status==="inprogress"?"En proceso":"Pendiente",""]),
+    ["","","",""],
+    ["GESTIÓN DEL TALENTO","","",""],
+    ["Riesgo de retención",g("retention_risk")||(p.retentionRisk||""),"Development designation",g("dev_designation")||(p.devDesig||"")],
+    ["Consideraciones personales",g("personal_notes")||(p.personalNotes||""),"",""],
+  ];
+
+  const csv=rows.map(r=>r.map(v=>"""+String(v||"").replace(/"/g,"""")+""").join(",")).join("
+");
+  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="Ficha_"+p.nombre.replace(/\s+/g,"_")+"_2025.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function checkOther(selectId, inputId){
@@ -1558,6 +1730,7 @@ async function saveCard(name){
   try{
     const data={
       nombre:name,
+      acciones_desarrollo:JSON.stringify(checkItems),
       pipeline_now:g("pipe_now"), pipeline_now_other:g("pipe_now_other"),
       pipeline_one:g("pipe_one"), pipeline_one_other:g("pipe_one_other"),
       pipeline_two:g("pipe_two"), pipeline_two_other:g("pipe_two_other"),
@@ -1570,6 +1743,7 @@ async function saveCard(name){
       dev_designation:g("dev_designation"), updated_at:new Date().toISOString()
     };
     await sbUpsert("fichas_carrera",data);
+    data.acciones_desarrollo=JSON.stringify(checkItems);
     FICHAS[name.toLowerCase()]={...data};
     renderFichasTable();setSyncPill("ok");
   }catch(e){setSyncPill("err");}
@@ -1602,7 +1776,7 @@ function modalFields(p){
     <div class="mf full"><label>Cargo</label><input id="mf_cargo" value="${p.cargo||""}" placeholder="Ej: Supply Chain Analyst"></div>
     <div class="mf"><label>Manager</label><input id="mf_manager" value="${p.manager||""}" placeholder="Nombre del manager"></div>
     <div class="mf"><label>Desempeño calibrado</label><select id="mf_desempeno"><option value="">Seleccionar</option>${perfOpts}</select></div>
-    <div class="mf"><label>Talent tag</label><select id="mf_talent"><option value="">Sin tag</option><option value="Key Talent"${p.talent==="Key Talent"?" selected":""}>Key Talent</option></select></div>
+    <div class="mf"><label>Talent tag</label><div style="font-size:11px;color:#94a3b8;padding:7px 10px;border:1px solid #f1f5f9;border-radius:7px;background:#f8fafc">${p.talent||"Se calcula automáticamente"}</div><input type="hidden" id="mf_talent" value="${p.talent||""}"></div>
     <div class="mf"><label>Potencial total (0-3)</label><input id="mf_pot_avg" type="number" min="0" max="3" step="0.01" value="${p.pot_avg!=null?p.pot_avg:""}" placeholder="Ej: 2.50"></div>
     <div class="mf full"><label>Clasificación potencial</label><select id="mf_pot_class"><option value="">Sin datos</option><option${p.pot_class==="Alto"?" selected":""}>Alto</option><option${p.pot_class==="Medio"?" selected":""}>Medio</option><option${p.pot_class==="Bajo"?" selected":""}>Bajo</option></select></div>
   `;
