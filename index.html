@@ -624,6 +624,8 @@ function buildPotSelect(){
     areas.forEach(a=>{const o=document.createElement("option");o.value=a==="Todas las áreas"?"":a;o.textContent=a;areaSel.appendChild(o);});
     if(currArea) areaSel.value = currArea;
   }
+  // Build manager filter
+  const managerSelEl = document.getElementById("potManagerFilter");
   if(managerSelEl && managerSelEl.options.length <= 1){
     const managers=Array.from(new Set(PARTNERS.map(p=>p.manager))).filter(Boolean).sort();
     managerSelEl.innerHTML='<option value="">Todos los líderes</option>';
@@ -634,7 +636,6 @@ function buildPotSelect(){
   const curr = sel.value;
   sel.innerHTML = '<option value="">Seleccionar persona...</option>';
   const areaFilter = areaSel ? areaSel.value : "";
-  const managerSelEl = document.getElementById("potManagerFilter");
   const managerFilterVal = managerSelEl ? managerSelEl.value : "";
   const filtered = [...PARTNERS]
     .filter(p => (!areaFilter || p.area === areaFilter) && (!managerFilterVal || p.manager === managerFilterVal))
