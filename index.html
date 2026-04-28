@@ -265,6 +265,8 @@ tr:hover td{background:#f8fafc}
         <div class="area-filter">
           <label>Área:</label>
           <select id="areaFilter" onchange="renderGrid()"><option>Todas las áreas</option></select>
+          <label style="margin-left:8px">Líder:</label>
+          <select id="managerFilter" onchange="renderGrid()"><option value="">Todos los líderes</option></select>
         </div>
         <div class="grid-header"><h2>Nine-Box Grid</h2><p id="gridSubtitle"></p></div>
         <div class="legend">
@@ -319,6 +321,9 @@ tr:hover td{background:#f8fafc}
         <option>Alineado</option><option>Role Model</option>
         <option>Desalineado</option><option>No Evaluado</option>
       </select>
+      <select id="managerFilter2" onchange="renderTable()" style="font-size:12px;padding:7px 11px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#1e293b">
+        <option value="">Todos los líderes</option>
+      </select>
     </div>
     <div class="table-wrap">
       <div class="loading" id="adminLoading"><div class="spinner"></div>Cargando...</div>
@@ -340,10 +345,15 @@ tr:hover td{background:#f8fafc}
         <h2>Fichas de Carrera Guardadas</h2>
         <p>Todas las fichas completadas — podés exportarlas a Excel</p>
       </div>
-      <button class="btn btn-primary" onclick="exportFichas()">
+      <div style="display:flex;align-items:center;gap:8px">
+        <select id="managerFilter3" onchange="renderFichasTable()" style="font-size:12px;padding:7px 11px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#1e293b;min-width:180px">
+          <option value="">Todos los líderes</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportFichas()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Exportar a Excel
       </button>
+      </div>
     </div>
     <div class="table-wrap">
       <div class="loading" id="fichasLoading"><div class="spinner"></div>Cargando fichas...</div>
@@ -374,8 +384,12 @@ tr:hover td{background:#f8fafc}
 
     <div class="pot-selector">
       <label>Área:</label>
-      <select id="potAreaFilter" onchange="buildPotSelect()" style="min-width:180px">
+      <select id="potAreaFilter" onchange="buildPotSelect()" style="min-width:160px">
         <option value="">Todas las áreas</option>
+      </select>
+      <label>Líder:</label>
+      <select id="potManagerFilter" onchange="buildPotSelect()" style="min-width:180px">
+        <option value="">Todos los líderes</option>
       </select>
       <label>Partner:</label>
       <select id="potPersonSelect" onchange="loadPotPerson()">
@@ -473,7 +487,12 @@ const ini=n=>{const p=n.trim().split(" ");return(p[0][0]+(p[1]?.[0]||"")).toUppe
 let PARTNERS=[],FICHAS={},activeName=null,editingId=null;
 
 function renderFichasTable(){
-  const fichas=Object.values(FICHAS).filter(f=>f.pipeline_now||f.pipeline_one||f.dev_needs||f.key_strengths||f.retention_risk||f.dev_designation);
+  const mf3=document.getElementById("managerFilter3")?.value||"";
+  const fichas=Object.values(FICHAS).filter(f=>{
+    if(!f.pipeline_now&&!f.pipeline_one&&!f.dev_needs&&!f.key_strengths&&!f.retention_risk&&!f.dev_designation) return false;
+    if(mf3){const p=PARTNERS.find(p=>p.nombre.toLowerCase()===f.nombre.toLowerCase());if(!p||p.manager!==mf3)return false;}
+    return true;
+  });
   document.getElementById("fichasLoading").style.display="none";
   document.getElementById("fichasTable").style.display=fichas.length?"table":"none";
   if(!fichas.length){document.getElementById("fichasLoading").innerHTML='<span style="color:#94a3b8;font-size:12px">No hay fichas guardadas aún</span>';document.getElementById("fichasLoading").style.display="flex";return;}
@@ -605,13 +624,20 @@ function buildPotSelect(){
     areas.forEach(a=>{const o=document.createElement("option");o.value=a==="Todas las áreas"?"":a;o.textContent=a;areaSel.appendChild(o);});
     if(currArea) areaSel.value = currArea;
   }
+  if(managerSel && managerSel.options.length <= 1){
+    const managers=Array.from(new Set(PARTNERS.map(p=>p.manager))).filter(Boolean).sort();
+    managerSel.innerHTML='<option value="">Todos los líderes</option>';
+    managers.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;managerSel.appendChild(o);});
+  }
   // Build person dropdown
   const sel = document.getElementById("potPersonSelect");
   const curr = sel.value;
   sel.innerHTML = '<option value="">Seleccionar persona...</option>';
   const areaFilter = areaSel ? areaSel.value : "";
+  const managerSel = document.getElementById("potManagerFilter");
+  const managerFilter = managerSel ? managerSel.value : "";
   const filtered = [...PARTNERS]
-    .filter(p => !areaFilter || p.area === areaFilter)
+    .filter(p => (!areaFilter || p.area === areaFilter) && (!managerFilter || p.manager === managerFilter))
     .sort((a,b)=>a.nombre.localeCompare(b.nombre));
   filtered.forEach(p=>{
     const o = document.createElement("option");
@@ -812,20 +838,28 @@ function merged(p){
 
 function buildFilters(){
   const areas=["Todas las áreas",...Array.from(new Set(PARTNERS.map(p=>p.area))).filter(Boolean).sort()];
-  ["areaFilter","areaFilter2"].forEach(id=>{const sel=document.getElementById(id);sel.innerHTML="";areas.forEach(a=>{const o=document.createElement("option");o.textContent=a;sel.appendChild(o);});});
+  ["areaFilter","areaFilter2"].forEach(id=>{const sel=document.getElementById(id);if(!sel)return;sel.innerHTML="";areas.forEach(a=>{const o=document.createElement("option");o.textContent=a;sel.appendChild(o);});});
+  // Build manager dropdowns
+  const managers=Array.from(new Set(PARTNERS.map(p=>p.manager))).filter(Boolean).sort();
+  ["managerFilter","managerFilter2","managerFilter3"].forEach(id=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    sel.innerHTML='<option value="">Todos los líderes</option>';
+    managers.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
+  });
 }
 
-function getFiltered(areaId="areaFilter",searchId=null,perfId=null){
+function getFiltered(areaId="areaFilter",searchId=null,perfId=null,managerId=null){
   let d=PARTNERS.map(merged);
   const a=document.getElementById(areaId)?.value;
   if(a&&a!=="Todas las áreas")d=d.filter(p=>p.area===a);
   if(searchId){const q=(document.getElementById(searchId)?.value||"").toLowerCase();if(q)d=d.filter(p=>p.nombre.toLowerCase().includes(q));}
   if(perfId){const pf=document.getElementById(perfId)?.value||"";if(pf)d=d.filter(p=>p.desempeno===pf);}
+  if(managerId){const mf=document.getElementById(managerId)?.value||"";if(mf)d=d.filter(p=>p.manager===mf);}
   return d;
 }
 
 function renderGrid(){
-  const data=getFiltered("areaFilter");
+  const data=getFiltered("areaFilter",null,null,"managerFilter");
   const placed=data.filter(p=>PERF[p.desempeno]);
   const noEval=data.filter(p=>!PERF[p.desempeno]).length;
   const hasPot=PARTNERS.some(p=>p.pot_avg!=null);
@@ -1747,7 +1781,7 @@ async function saveCard(name){
 }
 
 function renderTable(){
-  const data=getFiltered("areaFilter2","searchInput","perfFilter");
+  const data=getFiltered("areaFilter2","searchInput","perfFilter","managerFilter2");
   const pc=d=>d.desempeno==="Role Model"?"pb pb-rm":d.desempeno==="Alineado"?"pb pb-al":d.desempeno==="Desalineado"?"pb pb-des":"pb pb-ne";
   document.getElementById("adminBody").innerHTML=data.map(p=>`<tr>
     <td style="font-weight:600">${p.nombre}</td>
