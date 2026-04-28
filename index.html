@@ -624,20 +624,20 @@ function buildPotSelect(){
     areas.forEach(a=>{const o=document.createElement("option");o.value=a==="Todas las áreas"?"":a;o.textContent=a;areaSel.appendChild(o);});
     if(currArea) areaSel.value = currArea;
   }
-  if(managerSel && managerSel.options.length <= 1){
+  if(managerSelEl && managerSelEl.options.length <= 1){
     const managers=Array.from(new Set(PARTNERS.map(p=>p.manager))).filter(Boolean).sort();
-    managerSel.innerHTML='<option value="">Todos los líderes</option>';
-    managers.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;managerSel.appendChild(o);});
+    managerSelEl.innerHTML='<option value="">Todos los líderes</option>';
+    managers.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;managerSelEl.appendChild(o);});
   }
   // Build person dropdown
   const sel = document.getElementById("potPersonSelect");
   const curr = sel.value;
   sel.innerHTML = '<option value="">Seleccionar persona...</option>';
   const areaFilter = areaSel ? areaSel.value : "";
-  const managerSel = document.getElementById("potManagerFilter");
-  const managerFilter = managerSel ? managerSel.value : "";
+  const managerSelEl = document.getElementById("potManagerFilter");
+  const managerFilterVal = managerSelEl ? managerSelEl.value : "";
   const filtered = [...PARTNERS]
-    .filter(p => (!areaFilter || p.area === areaFilter) && (!managerFilter || p.manager === managerFilter))
+    .filter(p => (!areaFilter || p.area === areaFilter) && (!managerFilterVal || p.manager === managerFilterVal))
     .sort((a,b)=>a.nombre.localeCompare(b.nombre));
   filtered.forEach(p=>{
     const o = document.createElement("option");
