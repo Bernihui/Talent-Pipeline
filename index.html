@@ -1805,7 +1805,14 @@ function modalFields(p){
     <div class="mf"><label>Área / Gerencia</label><input id="mf_area" value="${p.area||""}" placeholder="Ej: Operaciones"></div>
     <div class="mf"><label>Seniority</label><input id="mf_seniority" value="${p.seniority||""}" placeholder="Ej: Sr Analyst"></div>
     <div class="mf full"><label>Cargo</label><input id="mf_cargo" value="${p.cargo||""}" placeholder="Ej: Supply Chain Analyst"></div>
-    <div class="mf"><label>Manager</label><select id="mf_manager" style="width:100%;border:1px solid #e2e8f0;border-radius:7px;padding:7px 10px;font-family:inherit;font-size:12px;color:#1e293b;background:#fff"><option value="">Seleccionar manager...</option>${[...new Set(PARTNERS.map(q=>q.nombre))].sort().map(n=>`<option value="${n}"${p.manager===n?" selected":""}>${n}</option>`).join("")}</select></div>
+    <div class="mf full"><label>Manager</label>
+  <select id="mf_manager" style="width:100%;border:1px solid #e2e8f0;border-radius:7px;padding:7px 10px;font-family:inherit;font-size:12px;color:#1e293b;background:#fff;margin-bottom:4px" onchange="document.getElementById('mf_manager_other').style.display=this.value==='__otro__'?'block':'none'">
+    <option value="">Seleccionar manager...</option>
+    ${[...new Set(PARTNERS.map(q=>q.nombre))].sort().map(n=>`<option value="${n}"${p.manager===n?" selected":""}>${n}</option>`).join("")}
+    <option value="__otro__">Otro (ingresar manualmente)...</option>
+  </select>
+  <input id="mf_manager_other" placeholder="Ingresar nombre del manager..." style="width:100%;border:1px solid #e2e8f0;border-radius:7px;padding:7px 10px;font-family:inherit;font-size:12px;color:#1e293b;background:#fff;display:none">
+</div>
     <div class="mf"><label>Desempeño calibrado</label><select id="mf_desempeno"><option value="">Seleccionar</option>${perfOpts}</select></div>
     <div class="mf"><label>Talent tag</label><div style="font-size:11px;color:#94a3b8;padding:7px 10px;border:1px solid #f1f5f9;border-radius:7px;background:#f8fafc">${p.talent||"Se calcula automáticamente"}</div><input type="hidden" id="mf_talent" value="${p.talent||""}"></div>
     <div class="mf"><label>Potencial total (0-3)</label><input id="mf_pot_avg" type="number" min="0" max="3" step="0.01" value="${p.pot_avg!=null?p.pot_avg:""}" placeholder="Ej: 2.50"></div>
@@ -1820,7 +1827,7 @@ async function saveModal(){
   const nombre=g("mf_nombre").trim();if(!nombre){alert("El nombre es obligatorio");return;}
   setSyncPill("saving");
   try{
-    const data={nombre,area:g("mf_area"),seniority:g("mf_seniority"),cargo:g("mf_cargo"),manager:g("mf_manager"),desempeno:g("mf_desempeno"),talent:g("mf_talent"),pot_avg:g("mf_pot_avg")!=""?parseFloat(g("mf_pot_avg")):null,pot_class:g("mf_pot_class"),updated_at:new Date().toISOString()};
+    const data={nombre,area:g("mf_area"),seniority:g("mf_seniority"),cargo:g("mf_cargo"),manager:(g("mf_manager")==="__otro__"?g("mf_manager_other"):g("mf_manager")),desempeno:g("mf_desempeno"),talent:g("mf_talent"),pot_avg:g("mf_pot_avg")!=""?parseFloat(g("mf_pot_avg")):null,pot_class:g("mf_pot_class"),updated_at:new Date().toISOString()};
     if(editingId)data.id=editingId;
     await sbUpsert("partners",data);
     closeModal();await reloadData();
